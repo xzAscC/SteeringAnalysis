@@ -627,6 +627,232 @@ class TestRunVerification:
 # ---------------------------------------------------------------------------
 
 
+# ---------------------------------------------------------------------------
+# Experiment 1: Token-level analysis at fixed layer
+# ---------------------------------------------------------------------------
+
+
+class TestTokenLevelVerdict:
+    def test_creation(self):
+        from steering_analysis.assumption_verification import TokenLevelVerdict
+
+        v = TokenLevelVerdict(
+            layer_idx=2,
+            threshold=0.5,
+            steered_some_above=True,
+            steered_all_above=False,
+            steered_fraction_above=0.75,
+            unsteered_all_below=True,
+            unsteered_max_cosine=0.3,
+            assumption_holds=True,
+            verdict="SOME",
+        )
+        assert v.layer_idx == 2
+        assert v.steered_some_above is True
+        assert v.steered_all_above is False
+        assert v.unsteered_all_below is True
+        assert v.assumption_holds is True
+        assert v.verdict == "SOME"
+
+    def test_verdict_all(self):
+        from steering_analysis.assumption_verification import TokenLevelVerdict
+
+        v = TokenLevelVerdict(
+            layer_idx=0, threshold=0.5,
+            steered_some_above=True, steered_all_above=True,
+            steered_fraction_above=1.0,
+            unsteered_all_below=True, unsteered_max_cosine=0.1,
+            assumption_holds=True, verdict="ALL",
+        )
+        assert v.verdict == "ALL"
+
+    def test_verdict_none(self):
+        from steering_analysis.assumption_verification import TokenLevelVerdict
+
+        v = TokenLevelVerdict(
+            layer_idx=0, threshold=0.5,
+            steered_some_above=False, steered_all_above=False,
+            steered_fraction_above=0.0,
+            unsteered_all_below=True, unsteered_max_cosine=0.1,
+            assumption_holds=False, verdict="NONE",
+        )
+        assert v.verdict == "NONE"
+
+
+class TestRunExperiment1TokenLevel:
+    def _make_cos_matrices(self):
+        """Steered: layer 0 has [0.6, 0.7, 0.3] (some above 0.5), layer 1 has [0.8, 0.9, 0.7] (all above 0.5).
+        Unsteered: both layers have all values <= 0.3."""
+        cos_steered = torch.tensor([[0.6, 0.7, 0.3], [0.8, 0.9, 0.7]])
+        cos_unsteered = torch.tensor([[0.1, 0.2, 0.3], [0.1, 0.2, 0.1]])
+        return cos_steered, cos_unsteered
+
+    def test_returns_list_of_verdicts(self):
+        from steering_analysis.assumption_verification import TokenLevelVerdict, run_experiment1_token_level
+
+        steered, unsteered = self._make_cos_matrices()
+        results = run_experiment1_token_level(steered, unsteered, threshold=0.5)
+        assert isinstance(results, list)
+        assert all(isinstance(v, TokenLevelVerdict) for v in results)
+
+    def test_correct_number_of_verdicts(self):
+        from steering_analysis.assumption_verification import run_experiment1_token_level
+
+        steered, unsteered = self._make_cos_matrices()
+        results = run_experiment1_token_level(steered, unsteered, threshold=0.5)
+        assert len(results) == 2  # one per layer
+
+    def test_some_above_verdict(self):
+        from steering_analysis.assumption_verification import run_experiment1_token_level
+
+        steered, unsteered = self._make_cos_matrices()
+        results = run_experiment1_token_level(steered, unsteered, threshold=0.5)
+        # Layer 0: [0.6, 0.7, 0.3] -> 2/3 above 0.5 = SOME, unsteered all <= 0.3
+        assert results[0].verdict == "SOME"
+        assert results[0].steered_some_above is True
+        assert results[0].steered_all_above is False
+        assert abs(results[0].steered_fraction_above - 2.0 / 3.0) < 1e-6
+        assert results[0].unsteered_all_below is True
+        assert results[0].assumption_holds is True
+
+    def test_all_above_verdict(self):
+        from steering_analysis.assumption_verification import run_experiment1_token_level
+
+        steered, unsteered = self._make_cos_matrices()
+        results = run_experiment1_token_level(steered, unsteered, threshold=0.5)
+        # Layer 1: [0.8, 0.9, 0.7] -> all above 0.5 = ALL, unsteered all <= 0.2
+        assert results[1].verdict == "ALL"
+        assert results[1].steered_all_above is True
+        assert results[1].assumption_holds is True
+
+    def test_unsteered_exceeds_threshold_assumption_fails(self):
+        from steering_analysis.assumption_verification import run_experiment1_token_level
+
+        steered = torch.tensor([[0.8, 0.9, 0.7]])
+        unsteered = torch.tensor([[0.6, 0.2, 0.1]])  # 0.6 > 0.5
+        results = run_experiment1_token_level(steered, unsteered, threshold=0.5)
+        assert results[0].unsteered_all_below is False
+        assert results[0].assumption_holds is False
+
+    def test_none_above_verdict(self):
+        from steering_analysis.assumption_verification import run_experiment1_token_level
+
+        steered = torch.tensor([[0.1, 0.2, 0.3]])  # all below 0.5
+        unsteered = torch.tensor([[0.1, 0.2, 0.1]])
+        results = run_experiment1_token_level(steered, unsteered, threshold=0.5)
+        assert results[0].verdict == "NONE"
+        assert results[0].steered_some_above is False
+        assert results[0].assumption_holds is False
+
+    def test_multiple_thresholds(self):
+        from steering_analysis.assumption_verification import run_experiment1_token_level
+
+        steered, unsteered = self._make_cos_matrices()
+        # With threshold 0.95, layer 1 has [0.8, 0.9, 0.7] -> NONE above
+        results = run_experiment1_token_level(steered, unsteered, threshold=0.95)
+        assert results[1].verdict == "NONE"
+
+
+# ---------------------------------------------------------------------------
+# Experiment 2: Layer-level existence
+# ---------------------------------------------------------------------------
+
+
+class TestLayerExistenceVerdict:
+    def test_creation(self):
+        from steering_analysis.assumption_verification import LayerExistenceVerdict
+
+        v = LayerExistenceVerdict(
+            threshold=0.5,
+            exists_steered_layer=True,
+            exists_unsteered_layer=False,
+            steered_layers_above=[1, 3],
+            unsteered_layers_above=[],
+            assumption_holds=True,
+        )
+        assert v.threshold == 0.5
+        assert v.exists_steered_layer is True
+        assert v.exists_unsteered_layer is False
+        assert v.assumption_holds is True
+
+
+class TestRunExperiment2LayerExistence:
+    def _make_cos_matrices(self):
+        """Steered: layers 0,1 above 0.5 (mean). Unsteered: no layer above 0.5 (mean)."""
+        cos_steered = torch.tensor([[0.8, 0.7], [0.6, 0.9], [0.1, 0.2]])
+        cos_unsteered = torch.tensor([[0.1, 0.2], [0.3, 0.1], [0.2, 0.1]])
+        return cos_steered, cos_unsteered
+
+    def test_returns_verdict(self):
+        from steering_analysis.assumption_verification import LayerExistenceVerdict, run_experiment2_layer_existence
+
+        steered, unsteered = self._make_cos_matrices()
+        result = run_experiment2_layer_existence(steered, unsteered, threshold=0.5)
+        assert isinstance(result, LayerExistenceVerdict)
+
+    def test_finds_steered_layers_above(self):
+        from steering_analysis.assumption_verification import run_experiment2_layer_existence
+
+        steered, unsteered = self._make_cos_matrices()
+        result = run_experiment2_layer_existence(steered, unsteered, threshold=0.5)
+        assert result.exists_steered_layer is True
+        assert 0 in result.steered_layers_above
+        assert 1 in result.steered_layers_above
+        assert 2 not in result.steered_layers_above
+
+    def test_no_unsteered_layers_above(self):
+        from steering_analysis.assumption_verification import run_experiment2_layer_existence
+
+        steered, unsteered = self._make_cos_matrices()
+        result = run_experiment2_layer_existence(steered, unsteered, threshold=0.5)
+        assert result.exists_unsteered_layer is False
+        assert result.unsteered_layers_above == []
+
+    def test_assumption_holds(self):
+        from steering_analysis.assumption_verification import run_experiment2_layer_existence
+
+        steered, unsteered = self._make_cos_matrices()
+        result = run_experiment2_layer_existence(steered, unsteered, threshold=0.5)
+        assert result.assumption_holds is True
+
+    def test_assumption_fails_when_unsteered_also_above(self):
+        from steering_analysis.assumption_verification import run_experiment2_layer_existence
+
+        steered = torch.tensor([[0.8, 0.9]])
+        unsteered = torch.tensor([[0.7, 0.6]])  # also above 0.5
+        result = run_experiment2_layer_existence(steered, unsteered, threshold=0.5)
+        assert result.exists_unsteered_layer is True
+        assert result.assumption_holds is False
+
+    def test_assumption_fails_when_no_steered_layer(self):
+        from steering_analysis.assumption_verification import run_experiment2_layer_existence
+
+        steered = torch.tensor([[0.1, 0.2]])
+        unsteered = torch.tensor([[0.1, 0.2]])
+        result = run_experiment2_layer_existence(steered, unsteered, threshold=0.5)
+        assert result.exists_steered_layer is False
+        assert result.assumption_holds is False
+
+    def test_high_threshold_nothing_above(self):
+        from steering_analysis.assumption_verification import run_experiment2_layer_existence
+
+        steered, unsteered = self._make_cos_matrices()
+        result = run_experiment2_layer_existence(steered, unsteered, threshold=0.99)
+        assert result.exists_steered_layer is False
+        assert result.exists_unsteered_layer is False
+        assert result.assumption_holds is False
+
+    def test_layer_existence_uses_mean_across_tokens(self):
+        """A layer is 'above threshold' if its mean cosine across tokens exceeds τ."""
+        from steering_analysis.assumption_verification import run_experiment2_layer_existence
+
+        # Layer 0: mean = 0.4 (below 0.5), layer 1: mean = 0.8 (above 0.5)
+        steered = torch.tensor([[0.3, 0.5], [0.7, 0.9]])
+        unsteered = torch.tensor([[0.1, 0.2], [0.1, 0.2]])
+        result = run_experiment2_layer_existence(steered, unsteered, threshold=0.5)
+        assert result.steered_layers_above == [1]
+
+
 class TestSaveResults:
     def _make_result(self):
         from steering_analysis.assumption_verification import (

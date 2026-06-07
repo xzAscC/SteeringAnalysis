@@ -12,28 +12,28 @@
     "9": {
       "steering_layer": 9,
       "empirical_thresholds": {
-        "95.0": 0.1783447265625,
-        "99.0": 0.19720458984375
+        "95.0": 0.15308228135108948,
+        "99.0": 0.183349609375
       },
       "per_threshold_analysis": {
         "0.1": {
-          "mean_fraction_above": 0.7930555560936531,
+          "mean_fraction_above": 0.8045833390206099,
           "all_above_count": 17
         },
         "0.3": {
-          "mean_fraction_above": 0.6105555693308512,
+          "mean_fraction_above": 0.6130833576122919,
           "all_above_count": 2
         },
         "0.5": {
-          "mean_fraction_above": 0.6094444592793783,
+          "mean_fraction_above": 0.6121666928132375,
           "all_above_count": 1
         },
         "0.7": {
-          "mean_fraction_above": 0.4525000119271378,
+          "mean_fraction_above": 0.4443333539238665,
           "all_above_count": 0
         },
         "0.9": {
-          "mean_fraction_above": 0.16888889336648086,
+          "mean_fraction_above": 0.16791667777579278,
           "all_above_count": 0
         }
       }
@@ -41,28 +41,28 @@
     "12": {
       "steering_layer": 12,
       "empirical_thresholds": {
-        "95.0": 0.155609130859375,
-        "99.0": 0.168731689453125
+        "95.0": 0.12573853135108948,
+        "99.0": 0.1676037609577179
       },
       "per_threshold_analysis": {
         "0.1": {
-          "mean_fraction_above": 0.7213888938228289,
+          "mean_fraction_above": 0.7031666771411741,
           "all_above_count": 12
         },
         "0.3": {
-          "mean_fraction_above": 0.49166667461395264,
+          "mean_fraction_above": 0.495833362142245,
           "all_above_count": 2
         },
         "0.5": {
-          "mean_fraction_above": 0.4908333420753479,
+          "mean_fraction_above": 0.49541669835646945,
           "all_above_count": 1
         },
         "0.7": {
-          "mean_fraction_above": 0.35944445136313635,
+          "mean_fraction_above": 0.3450833572618042,
           "all_above_count": 0
         },
         "0.9": {
-          "mean_fraction_above": 0.12500000294918814,
+          "mean_fraction_above": 0.1249166722021376,
           "all_above_count": 0
         }
       }
@@ -70,28 +70,28 @@
     "14": {
       "steering_layer": 14,
       "empirical_thresholds": {
-        "95.0": 0.1159210205078125,
-        "99.0": 0.1319580078125
+        "95.0": 0.08917236328125,
+        "99.0": 0.1318359375
       },
       "per_threshold_analysis": {
         "0.1": {
-          "mean_fraction_above": 0.5416666703919569,
+          "mean_fraction_above": 0.6979166666666666,
           "all_above_count": 10
         },
         "0.3": {
-          "mean_fraction_above": 0.3055555621782939,
+          "mean_fraction_above": 0.16666666666666666,
           "all_above_count": 2
         },
         "0.5": {
-          "mean_fraction_above": 0.2916666741172473,
+          "mean_fraction_above": 0.13541666666666666,
           "all_above_count": 1
         },
         "0.7": {
-          "mean_fraction_above": 0.2916666741172473,
+          "mean_fraction_above": 0.13541666666666666,
           "all_above_count": 1
         },
         "0.9": {
-          "mean_fraction_above": 0.1250000037252903,
+          "mean_fraction_above": 0.08333333333333333,
           "all_above_count": 0
         }
       }
@@ -99,28 +99,28 @@
     "16": {
       "steering_layer": 16,
       "empirical_thresholds": {
-        "95.0": 0.227447509765625,
-        "99.0": 0.30548095703125
+        "95.0": 0.18787232041358948,
+        "99.0": 0.3037133812904358
       },
       "per_threshold_analysis": {
         "0.1": {
-          "mean_fraction_above": 0.6477272734045982,
+          "mean_fraction_above": 0.60326087474823,
           "all_above_count": 9
         },
         "0.3": {
-          "mean_fraction_above": 0.4583333370586236,
+          "mean_fraction_above": 0.5126811576386293,
           "all_above_count": 8
         },
         "0.5": {
-          "mean_fraction_above": 0.2651515205701192,
+          "mean_fraction_above": 0.23550725479920706,
           "all_above_count": 2
         },
         "0.7": {
-          "mean_fraction_above": 0.25378788510958356,
+          "mean_fraction_above": 0.21920290837685266,
           "all_above_count": 1
         },
         "0.9": {
-          "mean_fraction_above": 0.10227273032069206,
+          "mean_fraction_above": 0.09601449687033892,
           "all_above_count": 0
         }
       }
@@ -128,12 +128,12 @@
     "18": {
       "steering_layer": 18,
       "empirical_thresholds": {
-        "95.0": 0.209747314453125,
-        "99.0": 0.267333984375
+        "95.0": 0.19154052436351776,
+        "99.0": 0.2666015625
       },
       "per_threshold_analysis": {
         "0.1": {
-          "mean_fraction_above": 0.7230392309526602,
+          "mean_fraction_above": 0.6678921623776356,
           "all_above_count": 8
         },
         "0.3": {
@@ -141,15 +141,15 @@
           "all_above_count": 6
         },
         "0.5": {
-          "mean_fraction_above": 0.24509804447491965,
+          "mean_fraction_above": 0.24754902720451355,
           "all_above_count": 2
         },
         "0.7": {
-          "mean_fraction_above": 0.24387255559364954,
+          "mean_fraction_above": 0.24693628400564194,
           "all_above_count": 1
         },
         "0.9": {
-          "mean_fraction_above": 0.12377451391269763,
+          "mean_fraction_above": 0.1243872606040289,
           "all_above_count": 0
         }
       }
