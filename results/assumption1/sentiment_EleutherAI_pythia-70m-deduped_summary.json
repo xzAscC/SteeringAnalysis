@@ -1,0 +1,30 @@
+{
+  "model_name": "EleutherAI/pythia-70m-deduped",
+  "concept": "sentiment",
+  "per_threshold_analysis": {
+    "0.1": {
+      "mean_fraction_above": 0.8344444444713494,
+      "all_above_count": 5
+    },
+    "0.3": {
+      "mean_fraction_above": 0.6977777828772863,
+      "all_above_count": 3
+    },
+    "0.5": {
+      "mean_fraction_above": 0.4611111308137576,
+      "all_above_count": 0
+    },
+    "0.7": {
+      "mean_fraction_above": 0.38111112515131634,
+      "all_above_count": 0
+    },
+    "0.9": {
+      "mean_fraction_above": 0.0,
+      "all_above_count": 0
+    }
+  },
+  "empirical_thresholds": {
+    "95.0": 0.48951417207717896,
+    "99.0": 0.6448925733566284
+  }
+}
