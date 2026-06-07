@@ -41,3 +41,17 @@ class SteeringConfig:
     max_new_tokens: int = 100
     temperature: float = 0.0
     steer_tokens: int | None = None
+
+
+@dataclass
+class VerificationConfig:
+    thresholds: list[float] = field(default_factory=lambda: [0.1, 0.3, 0.5, 0.7, 0.9])
+    empirical_percentiles: list[float] = field(default_factory=lambda: [95.0, 99.0])
+    extraction_layers: list[float] = field(default_factory=lambda: [0.4, 0.5, 0.6, 0.7, 0.8])
+    extraction_method: str = "mean"
+    extraction_num_pairs: int = 50
+    steering_multiplier: float = 1.0
+    max_new_tokens: int = 100
+    temperature: float = 0.0
+    num_samples: int = 5
+    seed: int = 42
