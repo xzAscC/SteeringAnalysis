@@ -104,7 +104,7 @@ def compute_empirical_thresholds(
     unsteered_cosines: Tensor, percentiles: list[float]
 ) -> dict[float, float]:
     """Compute percentile thresholds from the flattened unsteered cosine distribution."""
-    flat = unsteered_cosines.flatten().float().numpy()
+    flat = unsteered_cosines.flatten().float().cpu().numpy()
     import numpy as np
     return {p: float(np.percentile(flat, p)) for p in percentiles}
 

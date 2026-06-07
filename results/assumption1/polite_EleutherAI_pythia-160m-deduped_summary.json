@@ -1,0 +1,30 @@
+{
+  "model_name": "EleutherAI/pythia-160m-deduped",
+  "concept": "polite",
+  "per_threshold_analysis": {
+    "0.1": {
+      "mean_fraction_above": 0.0,
+      "all_above_count": 0
+    },
+    "0.3": {
+      "mean_fraction_above": 0.0,
+      "all_above_count": 0
+    },
+    "0.5": {
+      "mean_fraction_above": 0.0,
+      "all_above_count": 0
+    },
+    "0.7": {
+      "mean_fraction_above": 0.0,
+      "all_above_count": 0
+    },
+    "0.9": {
+      "mean_fraction_above": 0.0,
+      "all_above_count": 0
+    }
+  },
+  "empirical_thresholds": {
+    "95.0": 0.04715576022863388,
+    "99.0": 0.06292724609375
+  }
+}

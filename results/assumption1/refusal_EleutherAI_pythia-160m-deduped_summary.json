@@ -1,0 +1,30 @@
+{
+  "model_name": "EleutherAI/pythia-160m-deduped",
+  "concept": "refusal",
+  "per_threshold_analysis": {
+    "0.1": {
+      "mean_fraction_above": 0.8833333378036817,
+      "all_above_count": 9
+    },
+    "0.3": {
+      "mean_fraction_above": 0.6672222266594569,
+      "all_above_count": 2
+    },
+    "0.5": {
+      "mean_fraction_above": 0.5050000150998434,
+      "all_above_count": 0
+    },
+    "0.7": {
+      "mean_fraction_above": 0.3633333370089531,
+      "all_above_count": 0
+    },
+    "0.9": {
+      "mean_fraction_above": 0.0,
+      "all_above_count": 0
+    }
+  },
+  "empirical_thresholds": {
+    "95.0": 0.4096923768520355,
+    "99.0": 0.7339013814926147
+  }
+}
