@@ -50,7 +50,6 @@ def test_fake_generate_returns_batch_dim():
     assert output.shape[0] == 2
 
 
-
 @pytest.fixture
 def hooked_model(mock_hooked_model):
     config = ModelConfig(model_name="fake-model")
@@ -73,10 +72,14 @@ def test_generate_with_steering_scale_zero_changes_nothing(hooked_model):
     inputs = tok("hello", return_tensors="pt")
     with torch.no_grad():
         baseline_ids = hooked_model.model.generate(**inputs, max_new_tokens=5)
-    baseline_text = tok.decode(baseline_ids[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True)
+    baseline_text = tok.decode(baseline_ids[0][inputs["input_ids"].shape[1] :], skip_special_tokens=True)
 
     steered_text = hooked_model.generate_with_steering(
-        "hello", layer_idx=0, steering_vector=torch.randn(8), scale=0.0, max_new_tokens=5,
+        "hello",
+        layer_idx=0,
+        steering_vector=torch.randn(8),
+        scale=0.0,
+        max_new_tokens=5,
     )
     assert steered_text == baseline_text
 
@@ -84,18 +87,30 @@ def test_generate_with_steering_scale_zero_changes_nothing(hooked_model):
 def test_generate_with_steering_nonzero_scale_changes_output(hooked_model):
     sv = torch.ones(8) * 50.0
     steered = hooked_model.generate_with_steering(
-        "hello", layer_idx=0, steering_vector=sv, scale=1.0, max_new_tokens=5,
+        "hello",
+        layer_idx=0,
+        steering_vector=sv,
+        scale=1.0,
+        max_new_tokens=5,
     )
     unsteered = hooked_model.generate_with_steering(
-        "hello", layer_idx=0, steering_vector=sv, scale=0.0, max_new_tokens=5,
+        "hello",
+        layer_idx=0,
+        steering_vector=sv,
+        scale=0.0,
+        max_new_tokens=5,
     )
     assert steered != unsteered
 
 
 def test_generate_with_steering_full_steering(hooked_model):
     result = hooked_model.generate_with_steering(
-        "hello", layer_idx=0, steering_vector=torch.randn(8), scale=1.0,
-        max_new_tokens=5, steer_tokens=None,
+        "hello",
+        layer_idx=0,
+        steering_vector=torch.randn(8),
+        scale=1.0,
+        max_new_tokens=5,
+        steer_tokens=None,
     )
     assert isinstance(result, str)
     assert len(result) > 0
@@ -103,8 +118,12 @@ def test_generate_with_steering_full_steering(hooked_model):
 
 def test_generate_with_steering_prefix_steering(hooked_model):
     result = hooked_model.generate_with_steering(
-        "hello", layer_idx=0, steering_vector=torch.randn(8), scale=1.0,
-        max_new_tokens=5, steer_tokens=1,
+        "hello",
+        layer_idx=0,
+        steering_vector=torch.randn(8),
+        scale=1.0,
+        max_new_tokens=5,
+        steer_tokens=1,
     )
     assert isinstance(result, str)
     assert len(result) > 0
@@ -112,17 +131,25 @@ def test_generate_with_steering_prefix_steering(hooked_model):
 
 def test_generate_with_steering_hook_removed_after(hooked_model):
     hooked_model.generate_with_steering(
-        "hello", layer_idx=0, steering_vector=torch.randn(8), scale=1.0, max_new_tokens=5,
+        "hello",
+        layer_idx=0,
+        steering_vector=torch.randn(8),
+        scale=1.0,
+        max_new_tokens=5,
     )
     layer = hooked_model._get_layers_module()[0]
     assert len(list(layer._forward_hooks.keys())) == 0
 
 
 def test_generate_with_steering_different_layers(hooked_model):
+    torch.manual_seed(42)
     for layer_idx in [0, 3]:
         result = hooked_model.generate_with_steering(
-            "hello", layer_idx=layer_idx, steering_vector=torch.randn(8),
-            scale=1.0, max_new_tokens=5,
+            "hello",
+            layer_idx=layer_idx,
+            steering_vector=torch.randn(8),
+            scale=1.0,
+            max_new_tokens=5,
         )
         assert isinstance(result, str)
         assert len(result) > 0
