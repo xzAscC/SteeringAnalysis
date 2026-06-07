@@ -28,6 +28,8 @@ class HookedModel:
             return len(self.model.model.layers)
         if hasattr(self.model, "transformer") and hasattr(self.model.transformer, "h"):
             return len(self.model.transformer.h)
+        if hasattr(self.model, "gpt_neox") and hasattr(self.model.gpt_neox, "layers"):
+            return len(self.model.gpt_neox.layers)
         raise ValueError("Could not determine number of layers")
 
     def resolve_layers(self, relative_layers: list[float]) -> list[int]:
@@ -39,6 +41,8 @@ class HookedModel:
             return self.model.model.layers
         if hasattr(self.model, "transformer") and hasattr(self.model.transformer, "h"):
             return self.model.transformer.h
+        if hasattr(self.model, "gpt_neox") and hasattr(self.model.gpt_neox, "layers"):
+            return self.model.gpt_neox.layers
         raise ValueError("Could not find layers")
 
     def get_activations(self, texts: list[str], layers: list[int]) -> dict[int, Tensor]:
