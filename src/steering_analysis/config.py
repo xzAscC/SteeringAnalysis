@@ -55,3 +55,4 @@ class VerificationConfig:
     temperature: float = 0.0
     num_samples: int = 5
     seed: int = 42
+    run_controls: bool = False

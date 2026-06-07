@@ -293,6 +293,222 @@ class TestGetSteeredActivations:
             assert len(hooks) == 0, f"Layer {i} still has {len(hooks)} hooks"
 
 
+# ---------------------------------------------------------------------------
+# generate_orthogonal_vector tests
+# ---------------------------------------------------------------------------
+
+
+class TestGenerateOrthogonalVector:
+    def test_returns_unit_vector(self):
+        from steering_analysis.assumption_verification import generate_orthogonal_vector
+
+        concept = torch.randn(512)
+        result = generate_orthogonal_vector(concept)
+        assert abs(result.norm().item() - 1.0) < 1e-5
+
+    def test_is_orthogonal_to_concept(self):
+        from steering_analysis.assumption_verification import generate_orthogonal_vector
+
+        concept = torch.randn(512)
+        concept = concept / concept.norm()
+        result = generate_orthogonal_vector(concept)
+        cos = torch.nn.functional.cosine_similarity(
+            concept.unsqueeze(0), result.unsqueeze(0)
+        )
+        assert abs(cos.item()) < 0.01
+
+    def test_different_seeds_give_different_vectors(self):
+        from steering_analysis.assumption_verification import generate_orthogonal_vector
+
+        concept = torch.randn(512)
+        v1 = generate_orthogonal_vector(concept, seed=42)
+        v2 = generate_orthogonal_vector(concept, seed=123)
+        assert not torch.allclose(v1, v2)
+
+    def test_deterministic_with_same_seed(self):
+        from steering_analysis.assumption_verification import generate_orthogonal_vector
+
+        concept = torch.randn(512)
+        v1 = generate_orthogonal_vector(concept, seed=42)
+        v2 = generate_orthogonal_vector(concept, seed=42)
+        assert torch.allclose(v1, v2)
+
+
+# ---------------------------------------------------------------------------
+# SteeringLayerResult control fields tests
+# ---------------------------------------------------------------------------
+
+
+class TestSteeringLayerResultControls:
+    def test_control_fields_default_to_none(self):
+        from steering_analysis.assumption_verification import SteeringLayerResult
+
+        lr = SteeringLayerResult(
+            steering_layer=2,
+            threshold_results=[],
+            empirical_thresholds={},
+            cos_matrix_steered=torch.randn(2, 5),
+            cos_matrix_unsteered=torch.randn(2, 5),
+        )
+        assert lr.cos_matrix_random_control is None
+        assert lr.cos_matrix_natural is None
+
+    def test_control_fields_can_be_set(self):
+        from steering_analysis.assumption_verification import SteeringLayerResult
+
+        lr = SteeringLayerResult(
+            steering_layer=2,
+            threshold_results=[],
+            empirical_thresholds={},
+            cos_matrix_steered=torch.randn(2, 5),
+            cos_matrix_unsteered=torch.randn(2, 5),
+            cos_matrix_random_control=torch.randn(2, 5),
+            cos_matrix_natural=torch.randn(2, 5),
+        )
+        assert lr.cos_matrix_random_control is not None
+        assert lr.cos_matrix_natural is not None
+
+
+# ---------------------------------------------------------------------------
+# Natural alignment test (steered text without steering hook)
+# ---------------------------------------------------------------------------
+
+
+class TestNaturalAlignment:
+    def test_get_all_layer_activations_on_steered_text(self, mock_hooked_model):
+        from steering_analysis.assumption_verification import (
+            get_all_layer_activations,
+            get_steered_activations,
+        )
+
+        config = ModelConfig(model_name="fake-model")
+        hm = HookedModel(config)
+        sv = torch.randn(8)
+        text = "hello"
+
+        steered_act = get_steered_activations(hm, text, 2, sv, scale=5.0)
+        natural_act = get_all_layer_activations(hm, text)
+
+        assert not steered_act[2].allclose(natural_act[2])
+
+    def test_natural_cosine_lower_than_steered(self, mock_hooked_model):
+        from steering_analysis.assumption_verification import (
+            compute_cosine_similarities,
+            get_all_layer_activations,
+            get_steered_activations,
+        )
+
+        config = ModelConfig(model_name="fake-model")
+        hm = HookedModel(config)
+        sv = torch.randn(8)
+        text = "hello"
+
+        steered_act = get_steered_activations(hm, text, 2, sv, scale=10.0)
+        natural_act = get_all_layer_activations(hm, text)
+
+        concept = sv
+        steered_cos = compute_cosine_similarities(steered_act, concept)
+        natural_cos = compute_cosine_similarities(natural_act, concept)
+
+        # At steering layer, forced alignment should be higher than natural
+        assert steered_cos[2].mean() > natural_cos[2].mean()
+
+
+# ---------------------------------------------------------------------------
+# run_verification with controls tests
+# ---------------------------------------------------------------------------
+
+
+class TestRunVerificationWithControls:
+    def test_control_data_populated(self, mock_hooked_model):
+        from steering_analysis.assumption_verification import run_verification
+
+        config = ModelConfig(model_name="fake-model")
+        hm = HookedModel(config)
+        vc = VerificationConfig(
+            thresholds=[0.3],
+            empirical_percentiles=[95.0],
+            extraction_layers=[0.5],
+            extraction_method="mean",
+            extraction_num_pairs=2,
+            num_samples=2,
+            max_new_tokens=5,
+            run_controls=True,
+        )
+        pairs = [
+            ContrastPair(
+                positive="great",
+                negative="terrible",
+                metadata=ContrastPairMetadata(
+                    concept="sentiment", dataset="test", source="test", pair_index=0
+                ),
+            ),
+            ContrastPair(
+                positive="wonderful",
+                negative="awful",
+                metadata=ContrastPairMetadata(
+                    concept="sentiment", dataset="test", source="test", pair_index=1
+                ),
+            ),
+        ]
+
+        from unittest.mock import patch
+
+        with patch(
+            "steering_analysis.assumption_verification.load_contrast_pairs",
+            return_value=pairs,
+        ):
+            result = run_verification(hm, "sentiment", vc)
+
+        for lr in result.per_layer_results.values():
+            assert lr.cos_matrix_random_control is not None, "Missing random control data"
+            assert lr.cos_matrix_natural is not None, "Missing natural alignment data"
+
+    def test_controls_not_run_when_disabled(self, mock_hooked_model):
+        from steering_analysis.assumption_verification import run_verification
+
+        config = ModelConfig(model_name="fake-model")
+        hm = HookedModel(config)
+        vc = VerificationConfig(
+            thresholds=[0.3],
+            empirical_percentiles=[95.0],
+            extraction_layers=[0.5],
+            extraction_method="mean",
+            extraction_num_pairs=2,
+            num_samples=2,
+            max_new_tokens=5,
+            run_controls=False,
+        )
+        pairs = [
+            ContrastPair(
+                positive="great",
+                negative="terrible",
+                metadata=ContrastPairMetadata(
+                    concept="sentiment", dataset="test", source="test", pair_index=0
+                ),
+            ),
+            ContrastPair(
+                positive="wonderful",
+                negative="awful",
+                metadata=ContrastPairMetadata(
+                    concept="sentiment", dataset="test", source="test", pair_index=1
+                ),
+            ),
+        ]
+
+        from unittest.mock import patch
+
+        with patch(
+            "steering_analysis.assumption_verification.load_contrast_pairs",
+            return_value=pairs,
+        ):
+            result = run_verification(hm, "sentiment", vc)
+
+        for lr in result.per_layer_results.values():
+            assert lr.cos_matrix_random_control is None
+            assert lr.cos_matrix_natural is None
+
+
 class TestRunVerification:
     def test_returns_verification_result(self, mock_hooked_model):
         from steering_analysis.assumption_verification import VerificationResult, run_verification
