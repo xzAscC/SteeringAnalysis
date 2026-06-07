@@ -2,11 +2,13 @@
 
 from steering_analysis.assumption_verification import (
     LayerThresholdResult,
+    SteeringLayerResult,
     VerificationResult,
     compute_cosine_similarities,
     compute_empirical_thresholds,
     compute_threshold_violations,
     get_all_layer_activations,
+    get_steered_activations,
     run_verification,
     save_results,
 )
@@ -31,6 +33,7 @@ from steering_analysis.types import ContrastPair, ContrastPairMetadata, Steering
 __all__ = [
     "LayerThresholdResult",
     "SteeringConfig",
+    "SteeringLayerResult",
     "VALID_CONCEPTS",
     "ConceptConfig",
     "ContrastPair",
@@ -47,6 +50,7 @@ __all__ = [
     "compute_threshold_violations",
     "extract_steering_vector",
     "get_all_layer_activations",
+    "get_steered_activations",
     "load_contrast_pairs",
     "mean_aggregator",
     "pca_aggregator",

@@ -46,21 +46,16 @@ class TestVerificationResult:
     def test_creation(self):
         from steering_analysis.assumption_verification import VerificationResult
 
-        steered = torch.randn(4, 5)
-        unsteered = torch.randn(4, 5)
         result = VerificationResult(
             model_name="fake-model",
             concept="sentiment",
-            threshold_results=[],
-            empirical_thresholds={95.0: 0.8},
-            cos_matrix_steered=steered,
-            cos_matrix_unsteered=unsteered,
+            steering_layers_tested=[2, 3],
+            per_layer_results={},
         )
         assert result.model_name == "fake-model"
         assert result.concept == "sentiment"
-        assert result.cos_matrix_steered.shape == (4, 5)
-        assert result.cos_matrix_unsteered.shape == (4, 5)
-        assert result.empirical_thresholds == {95.0: 0.8}
+        assert result.steering_layers_tested == [2, 3]
+        assert result.per_layer_results == {}
 
 
 # ---------------------------------------------------------------------------
@@ -251,6 +246,53 @@ class TestComputeEmpiricalThresholds:
 # ---------------------------------------------------------------------------
 
 
+class TestGetSteeredActivations:
+    def test_returns_dict_with_all_layers(self, mock_hooked_model):
+        from steering_analysis.assumption_verification import get_steered_activations
+
+        config = ModelConfig(model_name="fake-model")
+        hm = HookedModel(config)
+        sv = torch.randn(8)
+        result = get_steered_activations(hm, "hello world", layer_idx=2, steering_vector=sv, scale=1.0)
+        assert isinstance(result, dict)
+        assert set(result.keys()) == {0, 1, 2, 3}
+
+    def test_steered_differs_from_clean(self, mock_hooked_model):
+        from steering_analysis.assumption_verification import get_all_layer_activations, get_steered_activations
+
+        config = ModelConfig(model_name="fake-model")
+        hm = HookedModel(config)
+        sv = torch.randn(8)
+        text = "hello"
+        clean = get_all_layer_activations(hm, text)
+        steered = get_steered_activations(hm, text, layer_idx=2, steering_vector=sv, scale=10.0)
+        assert not clean[2].allclose(steered[2]), "Steered layer 2 should differ from clean"
+
+    def test_steered_layer_differs_more_than_others(self, mock_hooked_model):
+        from steering_analysis.assumption_verification import get_all_layer_activations, get_steered_activations
+
+        config = ModelConfig(model_name="fake-model")
+        hm = HookedModel(config)
+        sv = torch.randn(8)
+        text = "hello"
+        clean = get_all_layer_activations(hm, text)
+        steered = get_steered_activations(hm, text, layer_idx=1, steering_vector=sv, scale=10.0)
+        delta_steered = (clean[1] - steered[1]).abs().mean().item()
+        delta_other = (clean[0] - steered[0]).abs().mean().item()
+        assert delta_steered > delta_other, "Steered layer should change more than non-steered layers"
+
+    def test_hooks_cleaned_up(self, mock_hooked_model):
+        from steering_analysis.assumption_verification import get_steered_activations
+
+        config = ModelConfig(model_name="fake-model")
+        hm = HookedModel(config)
+        sv = torch.randn(8)
+        get_steered_activations(hm, "test", layer_idx=2, steering_vector=sv, scale=1.0)
+        for i in range(4):
+            hooks = list(mock_hooked_model.model.layers[i]._forward_hooks.keys())
+            assert len(hooks) == 0, f"Layer {i} still has {len(hooks)} hooks"
+
+
 class TestRunVerification:
     def test_returns_verification_result(self, mock_hooked_model):
         from steering_analysis.assumption_verification import VerificationResult, run_verification
@@ -287,12 +329,11 @@ class TestRunVerification:
         assert isinstance(result, VerificationResult)
         assert result.model_name == "fake-model"
         assert result.concept == "sentiment"
-        assert len(result.threshold_results) > 0
-        assert result.cos_matrix_steered.shape[0] > 0
-        assert result.cos_matrix_unsteered.shape[0] > 0
+        assert len(result.steering_layers_tested) > 0
+        assert len(result.per_layer_results) > 0
 
-    def test_threshold_results_populated(self, mock_hooked_model):
-        from steering_analysis.assumption_verification import LayerThresholdResult, run_verification
+    def test_per_layer_results_populated(self, mock_hooked_model):
+        from steering_analysis.assumption_verification import SteeringLayerResult, run_verification
 
         config = ModelConfig(model_name="fake-model")
         hm = HookedModel(config)
@@ -322,7 +363,11 @@ class TestRunVerification:
         with patch("steering_analysis.assumption_verification.load_contrast_pairs", return_value=pairs):
             result = run_verification(hm, "sentiment", vc)
 
-        assert all(isinstance(r, LayerThresholdResult) for r in result.threshold_results)
+        for s_layer, lr in result.per_layer_results.items():
+            assert isinstance(lr, SteeringLayerResult)
+            assert lr.steering_layer == s_layer
+            assert lr.cos_matrix_steered.shape[0] > 0
+            assert lr.cos_matrix_unsteered.shape[0] > 0
 
     def test_empirical_thresholds_populated(self, mock_hooked_model):
         from steering_analysis.assumption_verification import run_verification
@@ -356,8 +401,9 @@ class TestRunVerification:
         with patch("steering_analysis.assumption_verification.load_contrast_pairs", return_value=pairs):
             result = run_verification(hm, "sentiment", vc)
 
-        assert 90.0 in result.empirical_thresholds
-        assert 95.0 in result.empirical_thresholds
+        for lr in result.per_layer_results.values():
+            assert 90.0 in lr.empirical_thresholds
+            assert 95.0 in lr.empirical_thresholds
 
 
 # ---------------------------------------------------------------------------
@@ -366,56 +412,15 @@ class TestRunVerification:
 
 
 class TestSaveResults:
-    def test_creates_output_dir(self, tmp_path):
-        from steering_analysis.assumption_verification import (
-            VerificationResult,
-            save_results,
-        )
-
-        result = VerificationResult(
-            model_name="test-model",
-            concept="sentiment",
-            threshold_results=[],
-            empirical_thresholds={95.0: 0.8},
-            cos_matrix_steered=torch.randn(4, 5),
-            cos_matrix_unsteered=torch.randn(4, 5),
-        )
-        output_dir = tmp_path / "nested" / "output"
-        save_results(result, output_dir, "exp1")
-        assert output_dir.exists()
-
-    def test_saves_cosine_matrices_pt(self, tmp_path):
-        from steering_analysis.assumption_verification import (
-            VerificationResult,
-            save_results,
-        )
-
-        result = VerificationResult(
-            model_name="test-model",
-            concept="sentiment",
-            threshold_results=[],
-            empirical_thresholds={},
-            cos_matrix_steered=torch.randn(4, 5),
-            cos_matrix_unsteered=torch.randn(4, 5),
-        )
-        save_results(result, tmp_path, "test")
-        pt_file = tmp_path / "test_cosine_matrices.pt"
-        assert pt_file.exists()
-        loaded = torch.load(pt_file, weights_only=True)
-        assert "steered" in loaded
-        assert "unsteered" in loaded
-        assert loaded["steered"].shape == (4, 5)
-
-    def test_saves_summary_json(self, tmp_path):
+    def _make_result(self):
         from steering_analysis.assumption_verification import (
             LayerThresholdResult,
+            SteeringLayerResult,
             VerificationResult,
-            save_results,
         )
 
-        result = VerificationResult(
-            model_name="test-model",
-            concept="sentiment",
+        lr = SteeringLayerResult(
+            steering_layer=2,
             threshold_results=[
                 LayerThresholdResult(0, 0.5, False, 0.9, 0.4, 0.3),
                 LayerThresholdResult(1, 1.0, True, 0.95, 0.7, 0.3),
@@ -424,6 +429,36 @@ class TestSaveResults:
             cos_matrix_steered=torch.randn(2, 5),
             cos_matrix_unsteered=torch.randn(2, 5),
         )
+        return VerificationResult(
+            model_name="test-model",
+            concept="sentiment",
+            steering_layers_tested=[2],
+            per_layer_results={2: lr},
+        )
+
+    def test_creates_output_dir(self, tmp_path):
+        from steering_analysis.assumption_verification import save_results
+
+        result = self._make_result()
+        output_dir = tmp_path / "nested" / "output"
+        save_results(result, output_dir, "exp1")
+        assert output_dir.exists()
+
+    def test_saves_cosine_matrices_pt(self, tmp_path):
+        from steering_analysis.assumption_verification import save_results
+
+        result = self._make_result()
+        save_results(result, tmp_path, "test")
+        pt_file = tmp_path / "test_cosine_matrices.pt"
+        assert pt_file.exists()
+        loaded = torch.load(pt_file, weights_only=True)
+        assert "steered_L2" in loaded
+        assert "unsteered_L2" in loaded
+
+    def test_saves_summary_json(self, tmp_path):
+        from steering_analysis.assumption_verification import save_results
+
+        result = self._make_result()
         save_results(result, tmp_path, "test")
         summary_file = tmp_path / "test_summary.json"
         assert summary_file.exists()
@@ -431,32 +466,21 @@ class TestSaveResults:
             summary = json.load(f)
         assert summary["model_name"] == "test-model"
         assert summary["concept"] == "sentiment"
-        assert "per_threshold_analysis" in summary
-        assert "empirical_thresholds" in summary
+        assert "per_layer_summary" in summary
+        assert "2" in summary["per_layer_summary"]
 
     def test_saves_full_results_json(self, tmp_path):
-        from steering_analysis.assumption_verification import (
-            LayerThresholdResult,
-            VerificationResult,
-            save_results,
-        )
+        from steering_analysis.assumption_verification import save_results
 
-        result = VerificationResult(
-            model_name="test-model",
-            concept="sentiment",
-            threshold_results=[LayerThresholdResult(0, 0.5, False, 0.9, 0.4, 0.3)],
-            empirical_thresholds={95.0: 0.8},
-            cos_matrix_steered=torch.tensor([[0.1, 0.2], [0.3, 0.4]]),
-            cos_matrix_unsteered=torch.tensor([[0.5, 0.6], [0.7, 0.8]]),
-        )
+        result = self._make_result()
         save_results(result, tmp_path, "test")
         full_file = tmp_path / "test_full_results.json"
         assert full_file.exists()
         with open(full_file) as f:
             data = json.load(f)
         assert data["model_name"] == "test-model"
-        assert isinstance(data["cos_matrix_steered"], list)
-        assert isinstance(data["threshold_results"], list)
+        assert "per_layer_results" in data
+        assert "2" in data["per_layer_results"]
 
 
 # ---------------------------------------------------------------------------
