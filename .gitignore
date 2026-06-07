@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# tex files
+69e5bc6d27002aeac07372b4/
+
+# opencode files
+.omo/
