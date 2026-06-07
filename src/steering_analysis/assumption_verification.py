@@ -34,6 +34,8 @@ class SteeringLayerResult:
     cos_matrix_unsteered: Tensor
     cos_matrix_random_control: Tensor | None = None
     cos_matrix_natural: Tensor | None = None
+    experiment1_verdicts: dict[float, list[TokenLevelVerdict]] = field(default_factory=dict)
+    experiment2_verdicts: dict[float, LayerExistenceVerdict] = field(default_factory=dict)
 
 
 @dataclass
@@ -42,6 +44,102 @@ class VerificationResult:
     concept: str
     steering_layers_tested: list[int]
     per_layer_results: dict[int, SteeringLayerResult] = field(default_factory=dict)
+
+
+@dataclass
+class TokenLevelVerdict:
+    layer_idx: int
+    threshold: float
+    steered_some_above: bool
+    steered_all_above: bool
+    steered_fraction_above: float
+    unsteered_all_below: bool
+    unsteered_max_cosine: float
+    assumption_holds: bool
+    verdict: str  # "ALL", "SOME", or "NONE"
+
+
+@dataclass
+class LayerExistenceVerdict:
+    threshold: float
+    exists_steered_layer: bool
+    exists_unsteered_layer: bool
+    steered_layers_above: list[int]
+    unsteered_layers_above: list[int]
+    assumption_holds: bool
+
+
+def run_experiment1_token_level(
+    cos_matrix_steered: Tensor,
+    cos_matrix_unsteered: Tensor,
+    threshold: float,
+) -> list[TokenLevelVerdict]:
+    num_layers = cos_matrix_steered.shape[0]
+    verdicts = []
+    for layer_idx in range(num_layers):
+        steered_layer = cos_matrix_steered[layer_idx]
+        unsteered_layer = cos_matrix_unsteered[layer_idx]
+
+        above_mask = steered_layer >= threshold
+        steered_some = bool(above_mask.any().item())
+        steered_all = bool(above_mask.all().item())
+        steered_frac = float(above_mask.float().mean().item())
+
+        unsteered_max = float(unsteered_layer.max().item())
+        unsteered_all_below = unsteered_max < threshold
+
+        if steered_all:
+            verdict_str = "ALL"
+        elif steered_some:
+            verdict_str = "SOME"
+        else:
+            verdict_str = "NONE"
+
+        assumption_holds = steered_some and unsteered_all_below
+
+        verdicts.append(TokenLevelVerdict(
+            layer_idx=layer_idx,
+            threshold=threshold,
+            steered_some_above=steered_some,
+            steered_all_above=steered_all,
+            steered_fraction_above=steered_frac,
+            unsteered_all_below=unsteered_all_below,
+            unsteered_max_cosine=unsteered_max,
+            assumption_holds=assumption_holds,
+            verdict=verdict_str,
+        ))
+    return verdicts
+
+
+def run_experiment2_layer_existence(
+    cos_matrix_steered: Tensor,
+    cos_matrix_unsteered: Tensor,
+    threshold: float,
+) -> LayerExistenceVerdict:
+    num_layers = cos_matrix_steered.shape[0]
+    steered_layers_above = []
+    unsteered_layers_above = []
+
+    for layer_idx in range(num_layers):
+        steered_mean = float(cos_matrix_steered[layer_idx].mean().item())
+        unsteered_mean = float(cos_matrix_unsteered[layer_idx].mean().item())
+        if steered_mean >= threshold:
+            steered_layers_above.append(layer_idx)
+        if unsteered_mean >= threshold:
+            unsteered_layers_above.append(layer_idx)
+
+    exists_steered = len(steered_layers_above) > 0
+    exists_unsteered = len(unsteered_layers_above) > 0
+    assumption_holds = exists_steered and not exists_unsteered
+
+    return LayerExistenceVerdict(
+        threshold=threshold,
+        exists_steered_layer=exists_steered,
+        exists_unsteered_layer=exists_unsteered,
+        steered_layers_above=steered_layers_above,
+        unsteered_layers_above=unsteered_layers_above,
+        assumption_holds=assumption_holds,
+    )
 
 
 def generate_orthogonal_vector(concept_vector: Tensor, seed: int = 42) -> Tensor:
@@ -272,9 +370,17 @@ def run_verification(
         cos_matrix_unsteered = torch.cat(all_unsteered_cos, dim=1)
 
         threshold_results = []
+        exp1_verdicts: dict[float, list[TokenLevelVerdict]] = {}
+        exp2_verdicts: dict[float, LayerExistenceVerdict] = {}
         for threshold in config.thresholds:
             violations = compute_threshold_violations(cos_matrix_steered, threshold)
             threshold_results.extend(violations)
+            exp1_verdicts[threshold] = run_experiment1_token_level(
+                cos_matrix_steered, cos_matrix_unsteered, threshold,
+            )
+            exp2_verdicts[threshold] = run_experiment2_layer_existence(
+                cos_matrix_steered, cos_matrix_unsteered, threshold,
+            )
 
         empirical_thresholds = compute_empirical_thresholds(
             cos_matrix_unsteered, config.empirical_percentiles
@@ -291,6 +397,8 @@ def run_verification(
             cos_matrix_unsteered=cos_matrix_unsteered,
             cos_matrix_random_control=cos_matrix_random_control,
             cos_matrix_natural=cos_matrix_natural,
+            experiment1_verdicts=exp1_verdicts,
+            experiment2_verdicts=exp2_verdicts,
         )
 
     return VerificationResult(
@@ -372,6 +480,34 @@ def save_results(result: VerificationResult, output_dir: Path, label: str) -> No
             "empirical_thresholds": lr.empirical_thresholds,
             "cos_matrix_steered": lr.cos_matrix_steered.tolist(),
             "cos_matrix_unsteered": lr.cos_matrix_unsteered.tolist(),
+            "experiment1_token_level": {
+                str(thresh): [
+                    {
+                        "layer_idx": v.layer_idx,
+                        "threshold": v.threshold,
+                        "steered_some_above": v.steered_some_above,
+                        "steered_all_above": v.steered_all_above,
+                        "steered_fraction_above": v.steered_fraction_above,
+                        "unsteered_all_below": v.unsteered_all_below,
+                        "unsteered_max_cosine": v.unsteered_max_cosine,
+                        "assumption_holds": v.assumption_holds,
+                        "verdict": v.verdict,
+                    }
+                    for v in verdicts
+                ]
+                for thresh, verdicts in lr.experiment1_verdicts.items()
+            },
+            "experiment2_layer_existence": {
+                str(thresh): {
+                    "threshold": v.threshold,
+                    "exists_steered_layer": v.exists_steered_layer,
+                    "exists_unsteered_layer": v.exists_unsteered_layer,
+                    "steered_layers_above": v.steered_layers_above,
+                    "unsteered_layers_above": v.unsteered_layers_above,
+                    "assumption_holds": v.assumption_holds,
+                }
+                for thresh, v in lr.experiment2_verdicts.items()
+            },
         }
         if lr.cos_matrix_random_control is not None:
             layer_data["cos_matrix_random_control"] = lr.cos_matrix_random_control.tolist()

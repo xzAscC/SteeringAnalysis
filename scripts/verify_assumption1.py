@@ -97,6 +97,27 @@ def main() -> None:
     save_results(result, args.output, label)
     print(f"Results saved to {args.output}/{label}_*")
 
+    print(f"\n{'='*60}")
+    print(f"Experiment Verdicts: {args.concept} / {args.model}")
+    print(f"{'='*60}")
+    for s_layer, lr in result.per_layer_results.items():
+        print(f"\n  Steering layer: {s_layer}")
+        for threshold in sorted(lr.experiment1_verdicts.keys()):
+            e1 = lr.experiment1_verdicts[threshold]
+            e2 = lr.experiment2_verdicts[threshold]
+            all_count = sum(1 for v in e1 if v.verdict == "ALL")
+            some_count = sum(1 for v in e1 if v.verdict == "SOME")
+            none_count = sum(1 for v in e1 if v.verdict == "NONE")
+            holds_count = sum(1 for v in e1 if v.assumption_holds)
+            print(
+                f"    τ={threshold:.1f}  "
+                f"Exp1: ALL={all_count} SOME={some_count} "
+                f"NONE={none_count} holds={holds_count}/{len(e1)}  |  "
+                f"Exp2: steered={e2.exists_steered_layer} "
+                f"unsteered={e2.exists_unsteered_layer} "
+                f"holds={e2.assumption_holds}"
+            )
+
 
 if __name__ == "__main__":
     main()

@@ -1,8 +1,10 @@
 """SteeringAnalysis: Concept vector extraction and steering for activation steering."""
 
 from steering_analysis.assumption_verification import (
+    LayerExistenceVerdict,
     LayerThresholdResult,
     SteeringLayerResult,
+    TokenLevelVerdict,
     VerificationResult,
     compute_cosine_similarities,
     compute_empirical_thresholds,
@@ -10,6 +12,8 @@ from steering_analysis.assumption_verification import (
     generate_orthogonal_vector,
     get_all_layer_activations,
     get_steered_activations,
+    run_experiment1_token_level,
+    run_experiment2_layer_existence,
     run_verification,
     save_results,
 )
@@ -32,9 +36,11 @@ from steering_analysis.steering import apply_steering
 from steering_analysis.types import ContrastPair, ContrastPairMetadata, SteeringVector
 
 __all__ = [
+    "LayerExistenceVerdict",
     "LayerThresholdResult",
     "SteeringConfig",
     "SteeringLayerResult",
+    "TokenLevelVerdict",
     "VALID_CONCEPTS",
     "ConceptConfig",
     "ContrastPair",
@@ -56,6 +62,8 @@ __all__ = [
     "load_contrast_pairs",
     "mean_aggregator",
     "pca_aggregator",
+    "run_experiment1_token_level",
+    "run_experiment2_layer_existence",
     "run_verification",
     "save_results",
 ]
