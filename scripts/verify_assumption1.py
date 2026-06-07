@@ -66,6 +66,12 @@ def main() -> None:
         help="Random seed (default: 42)",
     )
     parser.add_argument(
+        "--controls",
+        action="store_true",
+        default=False,
+        help="Run control experiments (random vector + natural alignment)",
+    )
+    parser.add_argument(
         "--output",
         default="results/assumption1/",
         help="Output directory (default: results/assumption1/)",
@@ -81,6 +87,7 @@ def main() -> None:
         num_samples=args.num_samples,
         max_new_tokens=args.max_new_tokens,
         seed=args.seed,
+        run_controls=args.controls,
     )
 
     result = run_verification(model, args.concept, config)

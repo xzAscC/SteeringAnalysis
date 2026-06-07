@@ -32,6 +32,8 @@ class SteeringLayerResult:
     empirical_thresholds: dict[float, float]
     cos_matrix_steered: Tensor
     cos_matrix_unsteered: Tensor
+    cos_matrix_random_control: Tensor | None = None
+    cos_matrix_natural: Tensor | None = None
 
 
 @dataclass
@@ -40,6 +42,20 @@ class VerificationResult:
     concept: str
     steering_layers_tested: list[int]
     per_layer_results: dict[int, SteeringLayerResult] = field(default_factory=dict)
+
+
+def generate_orthogonal_vector(concept_vector: Tensor, seed: int = 42) -> Tensor:
+    rng = torch.Generator(device=concept_vector.device)
+    rng.manual_seed(seed)
+    random_vec = torch.randn(
+        concept_vector.shape,
+        generator=rng,
+        device=concept_vector.device,
+        dtype=concept_vector.dtype,
+    )
+    concept_unit = concept_vector.float() / concept_vector.float().norm()
+    random_vec = random_vec.float() - torch.dot(random_vec.float(), concept_unit) * concept_unit
+    return (random_vec / random_vec.norm()).to(concept_vector.dtype)
 
 
 def get_all_layer_activations(model: HookedModel, text: str) -> dict[int, Tensor]:
@@ -205,12 +221,19 @@ def run_verification(
 
     per_layer_results: dict[int, SteeringLayerResult] = {}
 
+    random_vec = None
+    if config.run_controls:
+        first_sv = steering_vector.layer_activations[steering_layers[0]]
+        random_vec = generate_orthogonal_vector(first_sv, seed=config.seed + 1000)
+
     for s_layer in steering_layers:
         steering_vec = steering_vector.layer_activations[s_layer]
         scale = config.steering_multiplier * avg_norms[s_layer]
 
         all_steered_cos = []
         all_unsteered_cos = []
+        all_random_cos: list[Tensor] = []
+        all_natural_cos: list[Tensor] = []
 
         for prompt in prompts:
             steered_text = model.generate_with_steering(
@@ -237,6 +260,14 @@ def run_verification(
             all_steered_cos.append(steered_row)
             all_unsteered_cos.append(unsteered_row)
 
+            if config.run_controls:
+                random_cos = compute_cosine_similarities(steered_act, random_vec.to(steered_act[0].device))
+                all_random_cos.append(torch.stack([random_cos[i] for i in range(num_layers)]))
+
+                natural_act = get_all_layer_activations(model, steered_text)
+                natural_cos = compute_cosine_similarities(natural_act, concept_vec)
+                all_natural_cos.append(torch.stack([natural_cos[i] for i in range(num_layers)]))
+
         cos_matrix_steered = torch.cat(all_steered_cos, dim=1)
         cos_matrix_unsteered = torch.cat(all_unsteered_cos, dim=1)
 
@@ -249,12 +280,17 @@ def run_verification(
             cos_matrix_unsteered, config.empirical_percentiles
         )
 
+        cos_matrix_random_control = torch.cat(all_random_cos, dim=1) if all_random_cos else None
+        cos_matrix_natural = torch.cat(all_natural_cos, dim=1) if all_natural_cos else None
+
         per_layer_results[s_layer] = SteeringLayerResult(
             steering_layer=s_layer,
             threshold_results=threshold_results,
             empirical_thresholds=empirical_thresholds,
             cos_matrix_steered=cos_matrix_steered,
             cos_matrix_unsteered=cos_matrix_unsteered,
+            cos_matrix_random_control=cos_matrix_random_control,
+            cos_matrix_natural=cos_matrix_natural,
         )
 
     return VerificationResult(
@@ -272,10 +308,15 @@ def save_results(result: VerificationResult, output_dir: Path, label: str) -> No
 
     all_steered = {}
     all_unsteered = {}
+    all_controls = {}
     for s_layer, lr in result.per_layer_results.items():
         all_steered[f"steered_L{s_layer}"] = lr.cos_matrix_steered
         all_unsteered[f"unsteered_L{s_layer}"] = lr.cos_matrix_unsteered
-    torch.save({**all_steered, **all_unsteered}, output_dir / f"{label}_cosine_matrices.pt")
+        if lr.cos_matrix_random_control is not None:
+            all_controls[f"random_control_L{s_layer}"] = lr.cos_matrix_random_control
+        if lr.cos_matrix_natural is not None:
+            all_controls[f"natural_L{s_layer}"] = lr.cos_matrix_natural
+    torch.save({**all_steered, **all_unsteered, **all_controls}, output_dir / f"{label}_cosine_matrices.pt")
 
     summary = {
         "model_name": result.model_name,
@@ -315,7 +356,7 @@ def save_results(result: VerificationResult, output_dir: Path, label: str) -> No
         "per_layer_results": {},
     }
     for s_layer, lr in result.per_layer_results.items():
-        full_data["per_layer_results"][str(s_layer)] = {
+        layer_data: dict[str, Any] = {
             "steering_layer": s_layer,
             "threshold_results": [
                 {
@@ -332,6 +373,11 @@ def save_results(result: VerificationResult, output_dir: Path, label: str) -> No
             "cos_matrix_steered": lr.cos_matrix_steered.tolist(),
             "cos_matrix_unsteered": lr.cos_matrix_unsteered.tolist(),
         }
+        if lr.cos_matrix_random_control is not None:
+            layer_data["cos_matrix_random_control"] = lr.cos_matrix_random_control.tolist()
+        if lr.cos_matrix_natural is not None:
+            layer_data["cos_matrix_natural"] = lr.cos_matrix_natural.tolist()
+        full_data["per_layer_results"][str(s_layer)] = layer_data
 
     with open(output_dir / f"{label}_full_results.json", "w") as f:
         json.dump(full_data, f, indent=2)
