@@ -1,0 +1,158 @@
+{
+  "model_name": "EleutherAI/pythia-160m-deduped",
+  "concept": "polite",
+  "steering_layers_tested": [
+    4,
+    6,
+    7,
+    8,
+    9
+  ],
+  "per_layer_summary": {
+    "4": {
+      "steering_layer": 4,
+      "empirical_thresholds": {
+        "95.0": 0.05475006252527237,
+        "99.0": 0.07098388671875
+      },
+      "per_threshold_analysis": {
+        "0.1": {
+          "mean_fraction_above": 0.7091666695972284,
+          "all_above_count": 8
+        },
+        "0.3": {
+          "mean_fraction_above": 0.5758333527483046,
+          "all_above_count": 0
+        },
+        "0.5": {
+          "mean_fraction_above": 0.5750000158635279,
+          "all_above_count": 0
+        },
+        "0.7": {
+          "mean_fraction_above": 0.33766667630213004,
+          "all_above_count": 0
+        },
+        "0.9": {
+          "mean_fraction_above": 0.11950000375509262,
+          "all_above_count": 0
+        }
+      }
+    },
+    "6": {
+      "steering_layer": 6,
+      "empirical_thresholds": {
+        "95.0": 0.07696838676929474,
+        "99.0": 0.126708984375
+      },
+      "per_threshold_analysis": {
+        "0.1": {
+          "mean_fraction_above": 0.5240000014503797,
+          "all_above_count": 6
+        },
+        "0.3": {
+          "mean_fraction_above": 0.4126666809121768,
+          "all_above_count": 0
+        },
+        "0.5": {
+          "mean_fraction_above": 0.27933333612357575,
+          "all_above_count": 0
+        },
+        "0.7": {
+          "mean_fraction_above": 0.2459999998100102,
+          "all_above_count": 0
+        },
+        "0.9": {
+          "mean_fraction_above": 0.0620000014702479,
+          "all_above_count": 0
+        }
+      }
+    },
+    "7": {
+      "steering_layer": 7,
+      "empirical_thresholds": {
+        "95.0": 0.02019195631146431,
+        "99.0": 0.048403624445199966
+      },
+      "per_threshold_analysis": {
+        "0.1": {
+          "mean_fraction_above": 0.4166666666666667,
+          "all_above_count": 5
+        },
+        "0.3": {
+          "mean_fraction_above": 0.31600000460942584,
+          "all_above_count": 3
+        },
+        "0.5": {
+          "mean_fraction_above": 0.24866667886575064,
+          "all_above_count": 1
+        },
+        "0.7": {
+          "mean_fraction_above": 0.18233334521452585,
+          "all_above_count": 0
+        },
+        "0.9": {
+          "mean_fraction_above": 0.03266666829586029,
+          "all_above_count": 0
+        }
+      }
+    },
+    "8": {
+      "steering_layer": 8,
+      "empirical_thresholds": {
+        "95.0": 0.025589752942323685,
+        "99.0": 0.3563207983970642
+      },
+      "per_threshold_analysis": {
+        "0.1": {
+          "mean_fraction_above": 0.3333333333333333,
+          "all_above_count": 4
+        },
+        "0.3": {
+          "mean_fraction_above": 0.3333333333333333,
+          "all_above_count": 4
+        },
+        "0.5": {
+          "mean_fraction_above": 0.23333333432674408,
+          "all_above_count": 2
+        },
+        "0.7": {
+          "mean_fraction_above": 0.06666666766007741,
+          "all_above_count": 0
+        },
+        "0.9": {
+          "mean_fraction_above": 0.0,
+          "all_above_count": 0
+        }
+      }
+    },
+    "9": {
+      "steering_layer": 9,
+      "empirical_thresholds": {
+        "95.0": 0.05481109768152237,
+        "99.0": 0.08252258598804474
+      },
+      "per_threshold_analysis": {
+        "0.1": {
+          "mean_fraction_above": 0.25,
+          "all_above_count": 3
+        },
+        "0.3": {
+          "mean_fraction_above": 0.25,
+          "all_above_count": 3
+        },
+        "0.5": {
+          "mean_fraction_above": 0.25,
+          "all_above_count": 3
+        },
+        "0.7": {
+          "mean_fraction_above": 0.16666666666666666,
+          "all_above_count": 2
+        },
+        "0.9": {
+          "mean_fraction_above": 0.0,
+          "all_above_count": 0
+        }
+      }
+    }
+  }
+}
