@@ -145,8 +145,8 @@ def extract_steering_vector(
 
             if config.read_token_index < 0:
                 batch_size = pos_act.shape[0]
-                pos_last_idx = pos_seq_lens - 1
-                neg_last_idx = neg_seq_lens - 1
+                pos_last_idx = pos_seq_lens + config.read_token_index
+                neg_last_idx = neg_seq_lens + config.read_token_index
                 pos_tokens = pos_act[torch.arange(batch_size), pos_last_idx]
                 neg_tokens = neg_act[torch.arange(batch_size), neg_last_idx]
             else:

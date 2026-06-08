@@ -118,3 +118,32 @@ class TestExtractSteeringVector:
         assert vec.abs().max() < 100, (
             f"Vector max abs value is {vec.abs().max():.1f}, likely reading padded positions instead of real last token"
         )
+
+    def test_extract_negative_index_uses_relative_offset(self, mock_hooked_model):
+        """read_token_index=-2 should select the second-to-last real token, not the last."""
+        from unittest.mock import patch
+
+        hm = _make_model(mock_hooked_model)
+        # "abcde" has 5 real tokens (positions 0-4). read_token_index=-2 → position 3.
+        pairs = [
+            ContrastPair(positive="abcde", negative="fghij", metadata=ContrastPairMetadata()),
+        ]
+        ext_config = ExtractionConfig(layers=[0.5], method="mean", batch_size=1, read_token_index=-2)
+
+        torch.manual_seed(0)
+        fake_pos = {2: torch.randn(1, 5, 8)}
+        fake_neg = {2: torch.randn(1, 5, 8)}
+        # Mark positions we do NOT want selected with large values
+        # Position 4 (last real token) should NOT be selected by -2
+        fake_pos[2][0, 4, :] = 999.0
+        fake_neg[2][0, 4, :] = -999.0
+
+        with patch.object(hm, "get_activations", side_effect=[fake_pos, fake_neg]):
+            result = extract_steering_vector(hm, pairs, ext_config)
+
+        vec = result.layer_activations[2]
+        # If -2 incorrectly selects position 4 (last token), pos-neg = 999-(-999) = 1998
+        # If -2 correctly selects position 3 (second-to-last), pos-neg = small random diff
+        assert vec.abs().max() < 100, (
+            f"Vector max abs value is {vec.abs().max():.1f}, likely selecting last token instead of second-to-last for read_token_index=-2"
+        )
