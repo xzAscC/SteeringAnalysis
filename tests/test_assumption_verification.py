@@ -949,6 +949,120 @@ class TestSaveResults:
         assert "2" in data["per_layer_results"]
 
 
+class TestAngularGetSteeredActivations:
+    def test_angular_returns_all_layers(self, mock_hooked_model):
+        from steering_analysis.assumption_verification import get_steered_activations
+
+        config = ModelConfig(model_name="fake-model")
+        hm = HookedModel(config)
+        sv = torch.randn(8)
+        result = get_steered_activations(
+            hm,
+            "hello world",
+            layer_idx=2,
+            steering_vector=sv,
+            scale=1.0,
+            steering_method="angular",
+        )
+        assert isinstance(result, dict)
+        assert set(result.keys()) == {0, 1, 2, 3}
+
+    def test_angular_differs_from_additive(self, mock_hooked_model):
+        from steering_analysis.assumption_verification import get_steered_activations
+
+        config = ModelConfig(model_name="fake-model")
+        hm = HookedModel(config)
+        sv = torch.randn(8)
+        additive = get_steered_activations(hm, "hello", layer_idx=2, steering_vector=sv, scale=10.0)
+        angular = get_steered_activations(
+            hm,
+            "hello",
+            layer_idx=2,
+            steering_vector=sv,
+            scale=10.0,
+            steering_method="angular",
+        )
+        assert not additive[2].allclose(angular[2]), "Angular steered activations should differ from additive"
+
+    def test_angular_hooks_cleaned_up(self, mock_hooked_model):
+        from steering_analysis.assumption_verification import get_steered_activations
+
+        config = ModelConfig(model_name="fake-model")
+        hm = HookedModel(config)
+        sv = torch.randn(8)
+        get_steered_activations(
+            hm,
+            "test",
+            layer_idx=2,
+            steering_vector=sv,
+            scale=1.0,
+            steering_method="angular",
+        )
+        for i in range(4):
+            hooks = list(mock_hooked_model.model.layers[i]._forward_hooks.keys())
+            assert len(hooks) == 0, f"Layer {i} still has {len(hooks)} hooks"
+
+
+class TestAngularRunVerification:
+    def _make_pairs(self):
+        return [
+            ContrastPair(
+                positive="great",
+                negative="terrible",
+                metadata=ContrastPairMetadata(concept="sentiment", dataset="test", source="test", pair_index=0),
+            ),
+            ContrastPair(
+                positive="wonderful",
+                negative="awful",
+                metadata=ContrastPairMetadata(concept="sentiment", dataset="test", source="test", pair_index=1),
+            ),
+        ]
+
+    def test_angular_verification_produces_result(self, mock_hooked_model):
+        from steering_analysis.assumption_verification import VerificationResult, run_verification
+
+        config = ModelConfig(model_name="fake-model")
+        hm = HookedModel(config)
+        vc = VerificationConfig(
+            thresholds=[0.3],
+            extraction_layers=[0.5],
+            extraction_method="mean",
+            extraction_num_pairs=2,
+            num_samples=2,
+            max_new_tokens=5,
+            steering_method="angular",
+        )
+        from unittest.mock import patch
+
+        with patch("steering_analysis.assumption_verification.load_contrast_pairs", return_value=self._make_pairs()):
+            result = run_verification(hm, "sentiment", vc)
+
+        assert isinstance(result, VerificationResult)
+        assert len(result.per_layer_results) > 0
+
+    def test_prefix_verification_produces_result(self, mock_hooked_model):
+        from steering_analysis.assumption_verification import VerificationResult, run_verification
+
+        config = ModelConfig(model_name="fake-model")
+        hm = HookedModel(config)
+        vc = VerificationConfig(
+            thresholds=[0.3],
+            extraction_layers=[0.5],
+            extraction_method="mean",
+            extraction_num_pairs=2,
+            num_samples=2,
+            max_new_tokens=5,
+            steer_tokens=2,
+        )
+        from unittest.mock import patch
+
+        with patch("steering_analysis.assumption_verification.load_contrast_pairs", return_value=self._make_pairs()):
+            result = run_verification(hm, "sentiment", vc)
+
+        assert isinstance(result, VerificationResult)
+        assert len(result.per_layer_results) > 0
+
+
 # ---------------------------------------------------------------------------
 # Pythia architecture fixture (inline, same as test_models.py)
 # ---------------------------------------------------------------------------

@@ -57,6 +57,7 @@ def apply_steering(
                     max_new_tokens=config.max_new_tokens,
                     temperature=config.temperature,
                     steer_tokens=config.steer_tokens,
+                    steering_method=config.steering_method,
                 )
                 records.append(
                     {
@@ -66,6 +67,7 @@ def apply_steering(
                         "multiplier": multiplier,
                         "avg_activation": avg_norm,
                         "steer_tokens": config.steer_tokens,
+                        "steering_method": config.steering_method,
                         "sample_index": i,
                     }
                 )

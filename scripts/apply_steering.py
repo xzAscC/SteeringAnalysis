@@ -72,6 +72,12 @@ def main() -> None:
         help="Number of generation steps to apply steering (default: None = full steering)",
     )
     parser.add_argument(
+        "--steering-method",
+        choices=["additive", "angular"],
+        default="additive",
+        help="Steering method: additive (default) or angular (norm-preserving)",
+    )
+    parser.add_argument(
         "--seed",
         type=int,
         default=42,
@@ -98,14 +104,16 @@ def main() -> None:
         temperature=args.temperature,
         steer_tokens=args.steer_tokens,
         seed=args.seed,
+        steering_method=args.steering_method,
     )
 
     pairs = load_contrast_pairs(args.concept, args.num_samples, seed=args.seed)
     prompts = sample_with_seed([p.negative for p in pairs], args.num_samples, seed=args.seed)
 
     model_slug = safe_model_name(args.model)
+    method_label = f"_{args.steering_method}" if args.steering_method != "additive" else ""
     steer_label = f"prefix{args.steer_tokens}" if args.steer_tokens is not None else "full"
-    output_dir = f"{args.output.rstrip('/')}/{args.concept}_{model_slug}_{steer_label}"
+    output_dir = f"{args.output.rstrip('/')}/{args.concept}_{model_slug}_{steer_label}{method_label}"
 
     apply_steering(model, vector, prompts, steering_config, output_dir)
     print(f"Saved steering results to {output_dir}")

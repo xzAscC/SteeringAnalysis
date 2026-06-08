@@ -9,6 +9,12 @@ Usage:
     uv run python scripts/verify_assumption1.py \
         --model EleutherAI/pythia-160m-deduped --concept sentiment \
         --thresholds 0.1 0.3 0.5
+    uv run python scripts/verify_assumption1.py \
+        --model EleutherAI/pythia-70m-deduped --concept sentiment \
+        --steering-method angular
+    uv run python scripts/verify_assumption1.py \
+        --model EleutherAI/pythia-70m-deduped --concept refusal \
+        --steer-tokens 10
 """
 
 import argparse
@@ -72,6 +78,18 @@ def main() -> None:
         help="Run control experiments (random vector + natural alignment)",
     )
     parser.add_argument(
+        "--steering-method",
+        choices=["additive", "angular"],
+        default="additive",
+        help="Steering method: additive (default) or angular (norm-preserving)",
+    )
+    parser.add_argument(
+        "--steer-tokens",
+        type=int,
+        default=None,
+        help="Number of generation steps to apply steering (default: None = full steering)",
+    )
+    parser.add_argument(
         "--output",
         default="results/assumption1/",
         help="Output directory (default: results/assumption1/)",
@@ -91,17 +109,23 @@ def main() -> None:
         max_new_tokens=args.max_new_tokens,
         seed=args.seed,
         run_controls=args.controls,
+        steering_method=args.steering_method,
+        steer_tokens=args.steer_tokens,
     )
 
     result = run_verification(model, args.concept, config)
 
     model_slug = safe_model_name(args.model)
     label = f"{args.concept}_{model_slug}"
+    if args.steering_method != "additive":
+        label += f"_{args.steering_method}"
+    if args.steer_tokens is not None:
+        label += f"_prefix{args.steer_tokens}"
     save_results(result, args.output, label)
     print(f"Results saved to {args.output}/{label}_*")
 
     print(f"\n{'=' * 60}")
-    print(f"Experiment Verdicts: {args.concept} / {args.model}")
+    print(f"Experiment Verdicts: {args.concept} / {args.model} [{args.steering_method}]")
     print(f"{'=' * 60}")
     for s_layer, lr in result.per_layer_results.items():
         print(f"\n  Steering layer: {s_layer}")
