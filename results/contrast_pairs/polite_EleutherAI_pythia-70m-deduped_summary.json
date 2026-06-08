@@ -1,0 +1,179 @@
+{
+  "model_name": "EleutherAI/pythia-70m-deduped",
+  "concept": "polite",
+  "steering_layers_tested": [
+    2,
+    3,
+    4
+  ],
+  "per_layer_summary": {
+    "2": {
+      "steering_layer": 2,
+      "empirical_thresholds": {
+        "95.0": -0.048132188618183136,
+        "99.0": -0.033025674521923065
+      },
+      "experiment1_holds_count": {
+        "0.1": {
+          "holds": 0,
+          "total": 6
+        },
+        "0.3": {
+          "holds": 0,
+          "total": 6
+        },
+        "0.5": {
+          "holds": 0,
+          "total": 6
+        },
+        "0.7": {
+          "holds": 0,
+          "total": 6
+        },
+        "0.9": {
+          "holds": 0,
+          "total": 6
+        }
+      },
+      "experiment2_holds": {
+        "0.1": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.3": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.5": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.7": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.9": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        }
+      }
+    },
+    "3": {
+      "steering_layer": 3,
+      "empirical_thresholds": {
+        "95.0": -0.05157969892024994,
+        "99.0": -0.03771930932998657
+      },
+      "experiment1_holds_count": {
+        "0.1": {
+          "holds": 0,
+          "total": 6
+        },
+        "0.3": {
+          "holds": 0,
+          "total": 6
+        },
+        "0.5": {
+          "holds": 0,
+          "total": 6
+        },
+        "0.7": {
+          "holds": 0,
+          "total": 6
+        },
+        "0.9": {
+          "holds": 0,
+          "total": 6
+        }
+      },
+      "experiment2_holds": {
+        "0.1": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.3": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.5": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.7": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.9": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        }
+      }
+    },
+    "4": {
+      "steering_layer": 4,
+      "empirical_thresholds": {
+        "95.0": -0.0901520624756813,
+        "99.0": -0.07330010831356049
+      },
+      "experiment1_holds_count": {
+        "0.1": {
+          "holds": 0,
+          "total": 6
+        },
+        "0.3": {
+          "holds": 0,
+          "total": 6
+        },
+        "0.5": {
+          "holds": 0,
+          "total": 6
+        },
+        "0.7": {
+          "holds": 0,
+          "total": 6
+        },
+        "0.9": {
+          "holds": 0,
+          "total": 6
+        }
+      },
+      "experiment2_holds": {
+        "0.1": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.3": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.5": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.7": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.9": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        }
+      }
+    }
+  }
+}
