@@ -55,9 +55,7 @@ def test_compute_avg_activation_uses_all_tokens(mock_hooked_model):
     result = _compute_avg_activation(hm, texts, layers=layers)
     activations = hm.get_activations(texts, layers)
     expected = float(activations[0].norm(dim=-1).mean().item())
-    assert abs(result[0] - expected) < 1e-5, (
-        f"Expected avg norm over ALL tokens ({expected}), got {result[0]}"
-    )
+    assert abs(result[0] - expected) < 1e-5, f"Expected avg norm over ALL tokens ({expected}), got {result[0]}"
 
 
 def test_compute_avg_activation_returns_per_layer(mock_hooked_model):
@@ -89,7 +87,6 @@ def test_compute_avg_activation_returns_float_dict(mock_hooked_model):
         assert isinstance(val, float), f"Layer {layer_idx}: expected float, got {type(val)}"
 
 
-
 @pytest.fixture
 def hooked_model(mock_hooked_model):
     return HookedModel(ModelConfig(model_name="fake-model"))
@@ -105,8 +102,6 @@ def sample_vector():
         concept="test",
         method="mean",
     )
-
-
 
 
 def test_apply_steering_creates_jsonl_files(hooked_model, sample_vector, tmp_path):
@@ -189,22 +184,27 @@ def test_apply_steering_scales_by_avg_activation(hooked_model, sample_vector, tm
     config = SteeringConfig(multipliers=[1.0], num_samples=1)
     with patch("steering_analysis.steering._compute_avg_activation", return_value={0: 100.0, 2: 100.0}):
         apply_steering(
-            hooked_model, sample_vector, prompts=["hello"],
-            config=config, output_dir=tmp_path / "high",
+            hooked_model,
+            sample_vector,
+            prompts=["hello"],
+            config=config,
+            output_dir=tmp_path / "high",
         )
     with patch("steering_analysis.steering._compute_avg_activation", return_value={0: 0.001, 2: 0.001}):
         apply_steering(
-            hooked_model, sample_vector, prompts=["hello"],
-            config=config, output_dir=tmp_path / "low",
+            hooked_model,
+            sample_vector,
+            prompts=["hello"],
+            config=config,
+            output_dir=tmp_path / "low",
         )
     high_file = tmp_path / "high" / "layer_0.jsonl"
     low_file = tmp_path / "low" / "layer_0.jsonl"
     import json
+
     high_text = json.loads(high_file.read_text().strip())["generated_text"]
     low_text = json.loads(low_file.read_text().strip())["generated_text"]
-    assert high_text != low_text, (
-        "Expected different outputs when avg_activation scaling differs (100.0 vs 0.001)"
-    )
+    assert high_text != low_text, "Expected different outputs when avg_activation scaling differs (100.0 vs 0.001)"
 
 
 def test_apply_steering_records_avg_activation_in_output(hooked_model, sample_vector, tmp_path):
@@ -215,10 +215,32 @@ def test_apply_steering_records_avg_activation_in_output(hooked_model, sample_ve
 
     config = SteeringConfig(multipliers=[1.0], num_samples=1)
     apply_steering(
-        hooked_model, sample_vector, prompts=["hello"],
-        config=config, output_dir=tmp_path,
+        hooked_model,
+        sample_vector,
+        prompts=["hello"],
+        config=config,
+        output_dir=tmp_path,
     )
     jsonl_file = tmp_path / "layer_0.jsonl"
     record = json.loads(jsonl_file.read_text().strip())
     assert "avg_activation" in record, "Output should include avg_activation for reproducibility"
     assert isinstance(record["avg_activation"], float)
+
+
+def test_apply_steering_uses_seed(hooked_model, sample_vector, tmp_path):
+    """apply_steering should call torch.manual_seed with config.seed for reproducibility."""
+    from unittest.mock import patch
+
+    from steering_analysis.config import SteeringConfig
+    from steering_analysis.steering import apply_steering
+
+    config = SteeringConfig(multipliers=[1.0], num_samples=1, seed=123)
+    with patch("steering_analysis.steering.torch.manual_seed") as mock_seed:
+        apply_steering(
+            hooked_model,
+            sample_vector,
+            prompts=["hello"],
+            config=config,
+            output_dir=tmp_path,
+        )
+        mock_seed.assert_called_with(123)

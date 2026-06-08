@@ -198,3 +198,43 @@ def test_pythia_different_layers_different_activations(mock_pythia_model):
     hm = HookedModel(ModelConfig(model_name="fake-pythia"))
     activations = hm.get_activations(["hello"], [0, 3])
     assert not activations[0].allclose(activations[3]), "Activations from layer 0 and 3 should differ"
+
+
+class TestDeviceConfig:
+    """Issue 14: config.device should be forwarded to device_map in from_pretrained."""
+
+    def test_auto_device_uses_device_map_auto(self, monkeypatch):
+        import transformers
+
+        captured = {}
+
+        def capture_model(*args, **kwargs):
+            captured.update(kwargs)
+            from conftest import FakeCausalLM
+
+            return FakeCausalLM()
+
+        monkeypatch.setattr(transformers.AutoModelForCausalLM, "from_pretrained", capture_model)
+        monkeypatch.setattr(transformers.AutoTokenizer, "from_pretrained", lambda *a, **kw: _FakeTokenizer())
+
+        config = ModelConfig(model_name="fake-model", device="auto")
+        HookedModel(config)
+        assert captured["device_map"] == "auto"
+
+    def test_custom_device_uses_device_map_dict(self, monkeypatch):
+        import transformers
+
+        captured = {}
+
+        def capture_model(*args, **kwargs):
+            captured.update(kwargs)
+            from conftest import FakeCausalLM
+
+            return FakeCausalLM()
+
+        monkeypatch.setattr(transformers.AutoModelForCausalLM, "from_pretrained", capture_model)
+        monkeypatch.setattr(transformers.AutoTokenizer, "from_pretrained", lambda *a, **kw: _FakeTokenizer())
+
+        config = ModelConfig(model_name="fake-model", device="cuda:0")
+        HookedModel(config)
+        assert captured["device_map"] == {"": "cuda:0"}
