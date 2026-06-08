@@ -80,7 +80,7 @@ def run_experiment1_token_level(
         steered_layer = cos_matrix_steered[layer_idx]
         unsteered_layer = cos_matrix_unsteered[layer_idx]
 
-        above_mask = steered_layer >= threshold
+        above_mask = steered_layer > threshold
         steered_some = bool(above_mask.any().item())
         steered_all = bool(above_mask.all().item())
         steered_frac = float(above_mask.float().mean().item())
@@ -97,17 +97,19 @@ def run_experiment1_token_level(
 
         assumption_holds = steered_some and unsteered_all_below
 
-        verdicts.append(TokenLevelVerdict(
-            layer_idx=layer_idx,
-            threshold=threshold,
-            steered_some_above=steered_some,
-            steered_all_above=steered_all,
-            steered_fraction_above=steered_frac,
-            unsteered_all_below=unsteered_all_below,
-            unsteered_max_cosine=unsteered_max,
-            assumption_holds=assumption_holds,
-            verdict=verdict_str,
-        ))
+        verdicts.append(
+            TokenLevelVerdict(
+                layer_idx=layer_idx,
+                threshold=threshold,
+                steered_some_above=steered_some,
+                steered_all_above=steered_all,
+                steered_fraction_above=steered_frac,
+                unsteered_all_below=unsteered_all_below,
+                unsteered_max_cosine=unsteered_max,
+                assumption_holds=assumption_holds,
+                verdict=verdict_str,
+            )
+        )
     return verdicts
 
 
@@ -121,11 +123,11 @@ def run_experiment2_layer_existence(
     unsteered_layers_above = []
 
     for layer_idx in range(num_layers):
-        steered_mean = float(cos_matrix_steered[layer_idx].mean().item())
-        unsteered_mean = float(cos_matrix_unsteered[layer_idx].mean().item())
-        if steered_mean >= threshold:
+        steered_any = bool((cos_matrix_steered[layer_idx] > threshold).any().item())
+        unsteered_any = bool((cos_matrix_unsteered[layer_idx] > threshold).any().item())
+        if steered_any:
             steered_layers_above.append(layer_idx)
-        if unsteered_mean >= threshold:
+        if unsteered_any:
             unsteered_layers_above.append(layer_idx)
 
     exists_steered = len(steered_layers_above) > 0
@@ -170,6 +172,7 @@ def get_all_layer_activations(model: HookedModel, text: str) -> dict[int, Tensor
         def hook_fn(module, input, output):
             tensor_output = output[0] if isinstance(output, tuple) else output
             activations[layer_idx] = tensor_output.detach().clone()
+
         return hook_fn
 
     for layer_idx in range(model.num_layers):
@@ -220,6 +223,7 @@ def get_steered_activations(
         def hook_fn(module, input, output):
             tensor_output = output[0] if isinstance(output, tuple) else output
             activations[idx] = tensor_output.detach().clone()
+
         return hook_fn
 
     for li in range(model.num_layers):
@@ -236,9 +240,7 @@ def get_steered_activations(
     return activations
 
 
-def compute_cosine_similarities(
-    layer_activations: dict[int, Tensor], concept_vector: Tensor
-) -> dict[int, Tensor]:
+def compute_cosine_similarities(layer_activations: dict[int, Tensor], concept_vector: Tensor) -> dict[int, Tensor]:
     """Compute per-token cosine similarity between each layer's hidden states and a concept vector."""
     result = {}
     concept = concept_vector.unsqueeze(0).unsqueeze(0)
@@ -248,38 +250,42 @@ def compute_cosine_similarities(
     return result
 
 
-def compute_threshold_violations(
-    cos_matrix: Tensor, threshold: float
-) -> list[LayerThresholdResult]:
+def compute_threshold_violations(cos_matrix: Tensor, threshold: float) -> list[LayerThresholdResult]:
     """Analyze threshold violations per layer from a (num_layers, seq_len) cosine matrix."""
     results = []
     for layer_idx in range(cos_matrix.shape[0]):
         layer_cos = cos_matrix[layer_idx]
         if layer_cos.numel() == 0:
-            results.append(LayerThresholdResult(
-                layer_idx=layer_idx, fraction_above=0.0, all_above=False,
-                max_cosine=0.0, mean_cosine=0.0, threshold=threshold,
-            ))
+            results.append(
+                LayerThresholdResult(
+                    layer_idx=layer_idx,
+                    fraction_above=0.0,
+                    all_above=False,
+                    max_cosine=0.0,
+                    mean_cosine=0.0,
+                    threshold=threshold,
+                )
+            )
             continue
-        above = (layer_cos >= threshold).float()
+        above = (layer_cos > threshold).float()
         fraction_above = above.mean().item()
-        all_above = bool((layer_cos >= threshold).all().item())
+        all_above = bool((layer_cos > threshold).all().item())
         max_cosine = layer_cos.max().item()
         mean_cosine = layer_cos.mean().item()
-        results.append(LayerThresholdResult(
-            layer_idx=layer_idx,
-            fraction_above=fraction_above,
-            all_above=all_above,
-            max_cosine=max_cosine,
-            mean_cosine=mean_cosine,
-            threshold=threshold,
-        ))
+        results.append(
+            LayerThresholdResult(
+                layer_idx=layer_idx,
+                fraction_above=fraction_above,
+                all_above=all_above,
+                max_cosine=max_cosine,
+                mean_cosine=mean_cosine,
+                threshold=threshold,
+            )
+        )
     return results
 
 
-def compute_empirical_thresholds(
-    unsteered_cosines: Tensor, percentiles: list[float]
-) -> dict[float, float]:
+def compute_empirical_thresholds(unsteered_cosines: Tensor, percentiles: list[float]) -> dict[float, float]:
     """Compute percentile thresholds from the flattened unsteered cosine distribution."""
     flat = unsteered_cosines.flatten().float().cpu().numpy()
     if flat.size == 0:
@@ -287,9 +293,7 @@ def compute_empirical_thresholds(
     return {p: float(np.percentile(flat, p)) for p in percentiles}
 
 
-def run_verification(
-    model: HookedModel, concept: str, config: VerificationConfig
-) -> VerificationResult:
+def run_verification(model: HookedModel, concept: str, config: VerificationConfig) -> VerificationResult:
     """Run full verification pipeline across ALL extracted steering layers.
 
     For each steering layer:
@@ -335,12 +339,20 @@ def run_verification(
 
         for prompt in prompts:
             steered_text = model.generate_with_steering(
-                prompt, s_layer, steering_vec, scale,
-                max_new_tokens=config.max_new_tokens, temperature=config.temperature,
+                prompt,
+                s_layer,
+                steering_vec,
+                scale,
+                max_new_tokens=config.max_new_tokens,
+                temperature=config.temperature,
             )
             unsteered_text = model.generate_with_steering(
-                prompt, s_layer, steering_vec, scale=0.0,
-                max_new_tokens=config.max_new_tokens, temperature=config.temperature,
+                prompt,
+                s_layer,
+                steering_vec,
+                scale=0.0,
+                max_new_tokens=config.max_new_tokens,
+                temperature=config.temperature,
             )
 
             steered_act = get_steered_activations(model, steered_text, s_layer, steering_vec, scale)
@@ -376,15 +388,17 @@ def run_verification(
             violations = compute_threshold_violations(cos_matrix_steered, threshold)
             threshold_results.extend(violations)
             exp1_verdicts[threshold] = run_experiment1_token_level(
-                cos_matrix_steered, cos_matrix_unsteered, threshold,
+                cos_matrix_steered,
+                cos_matrix_unsteered,
+                threshold,
             )
             exp2_verdicts[threshold] = run_experiment2_layer_existence(
-                cos_matrix_steered, cos_matrix_unsteered, threshold,
+                cos_matrix_steered,
+                cos_matrix_unsteered,
+                threshold,
             )
 
-        empirical_thresholds = compute_empirical_thresholds(
-            cos_matrix_unsteered, config.empirical_percentiles
-        )
+        empirical_thresholds = compute_empirical_thresholds(cos_matrix_unsteered, config.empirical_percentiles)
 
         cos_matrix_random_control = torch.cat(all_random_cos, dim=1) if all_random_cos else None
         cos_matrix_natural = torch.cat(all_natural_cos, dim=1) if all_natural_cos else None
@@ -435,6 +449,8 @@ def save_results(result: VerificationResult, output_dir: Path, label: str) -> No
     for s_layer, lr in result.per_layer_results.items():
         per_threshold: dict[str, dict[str, Any]] = {}
         for r in lr.threshold_results:
+            if r.layer_idx != s_layer:
+                continue
             key = str(r.threshold)
             if key not in per_threshold:
                 per_threshold[key] = {"fraction_above": [], "all_above_count": 0}

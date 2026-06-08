@@ -86,3 +86,35 @@ class TestExtractSteeringVector:
         ext_config = ExtractionConfig(layers=[0.5], method="mean", batch_size=8)
         with pytest.raises(ValueError, match="cannot be empty"):
             extract_steering_vector(hm, [], ext_config)
+
+    def test_extract_uses_real_last_token_not_padded(self, mock_hooked_model):
+        """When read_token_index=-1, extraction uses attention-masked real last token,
+        not the padded column."""
+        from unittest.mock import patch
+
+        hm = _make_model(mock_hooked_model)
+        pairs = [
+            ContrastPair(positive="a", negative="b", metadata=ContrastPairMetadata()),
+            ContrastPair(positive="abcde", negative="fghij", metadata=ContrastPairMetadata()),
+        ]
+        ext_config = ExtractionConfig(layers=[0.5], method="mean", batch_size=2, read_token_index=-1)
+
+        # "a"/"b" are 1 token padded to 5. Real last = position 0.
+        # "abcde"/"fghij" are 5 tokens, no padding. Real last = position 4.
+        # resolve_layers([0.5]) for a 4-layer model returns [2].
+        torch.manual_seed(0)
+        fake_pos = {2: torch.randn(2, 5, 8)}
+        fake_neg = {2: torch.randn(2, 5, 8)}
+        # Mark padded positions with opposite-sign large values so pos-neg won't cancel
+        fake_pos[2][0, 1:, :] = 999.0
+        fake_neg[2][0, 1:, :] = -999.0
+
+        with patch.object(hm, "get_activations", side_effect=[fake_pos, fake_neg]):
+            result = extract_steering_vector(hm, pairs, ext_config)
+
+        vec = result.layer_activations[2]
+        # With the bug: for "a" vs "b", pos-neg at padded position = 999 - (-999) = 1998.
+        # With the fix: for "a" vs "b", pos-neg at real last (position 0) = small random diff.
+        assert vec.abs().max() < 100, (
+            f"Vector max abs value is {vec.abs().max():.1f}, likely reading padded positions instead of real last token"
+        )

@@ -193,6 +193,7 @@ class TestComputeThresholdViolations:
 
         cos_matrix = torch.tensor([[0.2, 0.5, 0.8]])
         results = compute_threshold_violations(cos_matrix, 0.5)
+        assert abs(results[0].fraction_above - 1.0 / 3.0) < 1e-6
         assert abs(results[0].max_cosine - 0.8) < 1e-6
         assert abs(results[0].mean_cosine - 0.5) < 1e-6
 
@@ -312,9 +313,7 @@ class TestGenerateOrthogonalVector:
         concept = torch.randn(512)
         concept = concept / concept.norm()
         result = generate_orthogonal_vector(concept)
-        cos = torch.nn.functional.cosine_similarity(
-            concept.unsqueeze(0), result.unsqueeze(0)
-        )
+        cos = torch.nn.functional.cosine_similarity(concept.unsqueeze(0), result.unsqueeze(0))
         assert abs(cos.item()) < 0.01
 
     def test_different_seeds_give_different_vectors(self):
@@ -439,16 +438,12 @@ class TestRunVerificationWithControls:
             ContrastPair(
                 positive="great",
                 negative="terrible",
-                metadata=ContrastPairMetadata(
-                    concept="sentiment", dataset="test", source="test", pair_index=0
-                ),
+                metadata=ContrastPairMetadata(concept="sentiment", dataset="test", source="test", pair_index=0),
             ),
             ContrastPair(
                 positive="wonderful",
                 negative="awful",
-                metadata=ContrastPairMetadata(
-                    concept="sentiment", dataset="test", source="test", pair_index=1
-                ),
+                metadata=ContrastPairMetadata(concept="sentiment", dataset="test", source="test", pair_index=1),
             ),
         ]
 
@@ -483,16 +478,12 @@ class TestRunVerificationWithControls:
             ContrastPair(
                 positive="great",
                 negative="terrible",
-                metadata=ContrastPairMetadata(
-                    concept="sentiment", dataset="test", source="test", pair_index=0
-                ),
+                metadata=ContrastPairMetadata(concept="sentiment", dataset="test", source="test", pair_index=0),
             ),
             ContrastPair(
                 positive="wonderful",
                 negative="awful",
-                metadata=ContrastPairMetadata(
-                    concept="sentiment", dataset="test", source="test", pair_index=1
-                ),
+                metadata=ContrastPairMetadata(concept="sentiment", dataset="test", source="test", pair_index=1),
             ),
         ]
 
@@ -658,11 +649,15 @@ class TestTokenLevelVerdict:
         from steering_analysis.assumption_verification import TokenLevelVerdict
 
         v = TokenLevelVerdict(
-            layer_idx=0, threshold=0.5,
-            steered_some_above=True, steered_all_above=True,
+            layer_idx=0,
+            threshold=0.5,
+            steered_some_above=True,
+            steered_all_above=True,
             steered_fraction_above=1.0,
-            unsteered_all_below=True, unsteered_max_cosine=0.1,
-            assumption_holds=True, verdict="ALL",
+            unsteered_all_below=True,
+            unsteered_max_cosine=0.1,
+            assumption_holds=True,
+            verdict="ALL",
         )
         assert v.verdict == "ALL"
 
@@ -670,11 +665,15 @@ class TestTokenLevelVerdict:
         from steering_analysis.assumption_verification import TokenLevelVerdict
 
         v = TokenLevelVerdict(
-            layer_idx=0, threshold=0.5,
-            steered_some_above=False, steered_all_above=False,
+            layer_idx=0,
+            threshold=0.5,
+            steered_some_above=False,
+            steered_all_above=False,
             steered_fraction_above=0.0,
-            unsteered_all_below=True, unsteered_max_cosine=0.1,
-            assumption_holds=False, verdict="NONE",
+            unsteered_all_below=True,
+            unsteered_max_cosine=0.1,
+            assumption_holds=False,
+            verdict="NONE",
         )
         assert v.verdict == "NONE"
 
@@ -743,6 +742,18 @@ class TestRunExperiment1TokenLevel:
         assert results[0].verdict == "NONE"
         assert results[0].steered_some_above is False
         assert results[0].assumption_holds is False
+
+    def test_strict_greater_than_threshold(self):
+        """Values exactly at threshold should NOT be counted as above (strict >)."""
+        from steering_analysis.assumption_verification import run_experiment1_token_level
+
+        # [0.5, 0.3, 0.2] with threshold 0.5 - 0.5 equals threshold, not strictly above
+        steered = torch.tensor([[0.5, 0.3, 0.2]])
+        unsteered = torch.tensor([[0.1, 0.2, 0.1]])
+        results = run_experiment1_token_level(steered, unsteered, threshold=0.5)
+        assert results[0].verdict == "NONE"
+        assert results[0].steered_some_above is False
+        assert results[0].steered_fraction_above == 0.0
 
     def test_multiple_thresholds(self):
         from steering_analysis.assumption_verification import run_experiment1_token_level
@@ -842,15 +853,27 @@ class TestRunExperiment2LayerExistence:
         assert result.exists_unsteered_layer is False
         assert result.assumption_holds is False
 
-    def test_layer_existence_uses_mean_across_tokens(self):
-        """A layer is 'above threshold' if its mean cosine across tokens exceeds τ."""
+    def test_layer_existence_uses_token_level_not_mean(self):
+        """A layer is 'above threshold' if ANY token exceeds τ (strict >), not the mean."""
         from steering_analysis.assumption_verification import run_experiment2_layer_existence
 
-        # Layer 0: mean = 0.4 (below 0.5), layer 1: mean = 0.8 (above 0.5)
+        # Layer 0: [0.3, 0.5] - 0.5 is NOT strictly > 0.5, so excluded
+        # Layer 1: [0.7, 0.9] - both strictly > 0.5, so included
         steered = torch.tensor([[0.3, 0.5], [0.7, 0.9]])
         unsteered = torch.tensor([[0.1, 0.2], [0.1, 0.2]])
         result = run_experiment2_layer_existence(steered, unsteered, threshold=0.5)
         assert result.steered_layers_above == [1]
+
+    def test_layer_existence_detects_sparse_crossing(self):
+        """A layer where mean < threshold but one token > threshold should still be detected."""
+        from steering_analysis.assumption_verification import run_experiment2_layer_existence
+
+        # mean = 0.37 < 0.5, but 0.9 > 0.5 → should still be detected
+        steered = torch.tensor([[0.1, 0.1, 0.9]])
+        unsteered = torch.tensor([[0.1, 0.2, 0.1]])
+        result = run_experiment2_layer_existence(steered, unsteered, threshold=0.5)
+        assert result.exists_steered_layer is True
+        assert 0 in result.steered_layers_above
 
 
 class TestSaveResults:
@@ -866,6 +889,7 @@ class TestSaveResults:
             threshold_results=[
                 LayerThresholdResult(0, 0.5, False, 0.9, 0.4, 0.3),
                 LayerThresholdResult(1, 1.0, True, 0.95, 0.7, 0.3),
+                LayerThresholdResult(2, 0.7, False, 0.85, 0.6, 0.3),
             ],
             empirical_thresholds={95.0: 0.8},
             cos_matrix_steered=torch.randn(2, 5),
