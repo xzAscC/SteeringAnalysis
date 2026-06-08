@@ -1,0 +1,158 @@
+{
+  "model_name": "EleutherAI/pythia-160m-deduped",
+  "concept": "refusal",
+  "steering_layers_tested": [
+    4,
+    6,
+    7,
+    8,
+    9
+  ],
+  "per_layer_summary": {
+    "4": {
+      "steering_layer": 4,
+      "empirical_thresholds": {
+        "95.0": 0.36085206270217896,
+        "99.0": 0.5025097727775574
+      },
+      "per_threshold_analysis": {
+        "0.1": {
+          "mean_fraction_above": 0.945000005265077,
+          "all_above_count": 10
+        },
+        "0.3": {
+          "mean_fraction_above": 0.8141666824618975,
+          "all_above_count": 7
+        },
+        "0.5": {
+          "mean_fraction_above": 0.6966666790346304,
+          "all_above_count": 6
+        },
+        "0.7": {
+          "mean_fraction_above": 0.6633333389957746,
+          "all_above_count": 6
+        },
+        "0.9": {
+          "mean_fraction_above": 0.07350000457760568,
+          "all_above_count": 0
+        }
+      }
+    },
+    "6": {
+      "steering_layer": 6,
+      "empirical_thresholds": {
+        "95.0": 0.343017578125,
+        "99.0": 0.50244140625
+      },
+      "per_threshold_analysis": {
+        "0.1": {
+          "mean_fraction_above": 0.9570053120454153,
+          "all_above_count": 10
+        },
+        "0.3": {
+          "mean_fraction_above": 0.6992031944294771,
+          "all_above_count": 5
+        },
+        "0.5": {
+          "mean_fraction_above": 0.5514608224232992,
+          "all_above_count": 5
+        },
+        "0.7": {
+          "mean_fraction_above": 0.36752988025546074,
+          "all_above_count": 4
+        },
+        "0.9": {
+          "mean_fraction_above": 0.18957503388325372,
+          "all_above_count": 0
+        }
+      }
+    },
+    "7": {
+      "steering_layer": 7,
+      "empirical_thresholds": {
+        "95.0": 0.26026612520217896,
+        "99.0": 0.35257813334465027
+      },
+      "per_threshold_analysis": {
+        "0.1": {
+          "mean_fraction_above": 1.0,
+          "all_above_count": 12
+        },
+        "0.3": {
+          "mean_fraction_above": 0.8998333613077799,
+          "all_above_count": 6
+        },
+        "0.5": {
+          "mean_fraction_above": 0.7206666817267736,
+          "all_above_count": 4
+        },
+        "0.7": {
+          "mean_fraction_above": 0.3993333379427592,
+          "all_above_count": 4
+        },
+        "0.9": {
+          "mean_fraction_above": 0.07416667230427265,
+          "all_above_count": 0
+        }
+      }
+    },
+    "8": {
+      "steering_layer": 8,
+      "empirical_thresholds": {
+        "95.0": 0.2978515625,
+        "99.0": 0.38353514671325684
+      },
+      "per_threshold_analysis": {
+        "0.1": {
+          "mean_fraction_above": 0.9913333406051,
+          "all_above_count": 9
+        },
+        "0.3": {
+          "mean_fraction_above": 0.7990000148614248,
+          "all_above_count": 4
+        },
+        "0.5": {
+          "mean_fraction_above": 0.6268333395322164,
+          "all_above_count": 3
+        },
+        "0.7": {
+          "mean_fraction_above": 0.31183333694934845,
+          "all_above_count": 3
+        },
+        "0.9": {
+          "mean_fraction_above": 0.10600000371535619,
+          "all_above_count": 0
+        }
+      }
+    },
+    "9": {
+      "steering_layer": 9,
+      "empirical_thresholds": {
+        "95.0": 0.24060669541358948,
+        "99.0": 0.34150147438049316
+      },
+      "per_threshold_analysis": {
+        "0.1": {
+          "mean_fraction_above": 0.9506666709979376,
+          "all_above_count": 9
+        },
+        "0.3": {
+          "mean_fraction_above": 0.6556666704515616,
+          "all_above_count": 3
+        },
+        "0.5": {
+          "mean_fraction_above": 0.5128333469231924,
+          "all_above_count": 3
+        },
+        "0.7": {
+          "mean_fraction_above": 0.21766667068004608,
+          "all_above_count": 2
+        },
+        "0.9": {
+          "mean_fraction_above": 0.1660000036160151,
+          "all_above_count": 1
+        }
+      }
+    }
+  }
+}
