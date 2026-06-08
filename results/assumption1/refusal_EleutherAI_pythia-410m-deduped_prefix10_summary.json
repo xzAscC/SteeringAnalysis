@@ -1,0 +1,158 @@
+{
+  "model_name": "EleutherAI/pythia-410m-deduped",
+  "concept": "refusal",
+  "steering_layers_tested": [
+    9,
+    12,
+    14,
+    16,
+    18
+  ],
+  "per_layer_summary": {
+    "9": {
+      "steering_layer": 9,
+      "empirical_thresholds": {
+        "95.0": 0.0694580078125,
+        "99.0": 0.11761474609375
+      },
+      "per_threshold_analysis": {
+        "0.1": {
+          "mean_fraction_above": 1.0,
+          "all_above_count": 1
+        },
+        "0.3": {
+          "mean_fraction_above": 0.9615384340286255,
+          "all_above_count": 0
+        },
+        "0.5": {
+          "mean_fraction_above": 0.9615384340286255,
+          "all_above_count": 0
+        },
+        "0.7": {
+          "mean_fraction_above": 0.9615384340286255,
+          "all_above_count": 0
+        },
+        "0.9": {
+          "mean_fraction_above": 0.9615384340286255,
+          "all_above_count": 0
+        }
+      }
+    },
+    "12": {
+      "steering_layer": 12,
+      "empirical_thresholds": {
+        "95.0": 0.01729125902056694,
+        "99.0": 0.07367187738418579
+      },
+      "per_threshold_analysis": {
+        "0.1": {
+          "mean_fraction_above": 0.9852071404457092,
+          "all_above_count": 0
+        },
+        "0.3": {
+          "mean_fraction_above": 0.9852071404457092,
+          "all_above_count": 0
+        },
+        "0.5": {
+          "mean_fraction_above": 0.9852071404457092,
+          "all_above_count": 0
+        },
+        "0.7": {
+          "mean_fraction_above": 0.9852071404457092,
+          "all_above_count": 0
+        },
+        "0.9": {
+          "mean_fraction_above": 0.9852071404457092,
+          "all_above_count": 0
+        }
+      }
+    },
+    "14": {
+      "steering_layer": 14,
+      "empirical_thresholds": {
+        "95.0": 0.06433410942554474,
+        "99.0": 0.1215222179889679
+      },
+      "per_threshold_analysis": {
+        "0.1": {
+          "mean_fraction_above": 0.8181818127632141,
+          "all_above_count": 0
+        },
+        "0.3": {
+          "mean_fraction_above": 0.8181818127632141,
+          "all_above_count": 0
+        },
+        "0.5": {
+          "mean_fraction_above": 0.8181818127632141,
+          "all_above_count": 0
+        },
+        "0.7": {
+          "mean_fraction_above": 0.8181818127632141,
+          "all_above_count": 0
+        },
+        "0.9": {
+          "mean_fraction_above": 0.8181818127632141,
+          "all_above_count": 0
+        }
+      }
+    },
+    "16": {
+      "steering_layer": 16,
+      "empirical_thresholds": {
+        "95.0": 0.14221802353858948,
+        "99.0": 0.2460949718952179
+      },
+      "per_threshold_analysis": {
+        "0.1": {
+          "mean_fraction_above": 1.0,
+          "all_above_count": 1
+        },
+        "0.3": {
+          "mean_fraction_above": 0.9000000357627869,
+          "all_above_count": 0
+        },
+        "0.5": {
+          "mean_fraction_above": 0.9000000357627869,
+          "all_above_count": 0
+        },
+        "0.7": {
+          "mean_fraction_above": 0.9000000357627869,
+          "all_above_count": 0
+        },
+        "0.9": {
+          "mean_fraction_above": 0.9000000357627869,
+          "all_above_count": 0
+        }
+      }
+    },
+    "18": {
+      "steering_layer": 18,
+      "empirical_thresholds": {
+        "95.0": 0.33527833223342896,
+        "99.0": 0.498046875
+      },
+      "per_threshold_analysis": {
+        "0.1": {
+          "mean_fraction_above": 1.0,
+          "all_above_count": 1
+        },
+        "0.3": {
+          "mean_fraction_above": 1.0,
+          "all_above_count": 1
+        },
+        "0.5": {
+          "mean_fraction_above": 1.0,
+          "all_above_count": 1
+        },
+        "0.7": {
+          "mean_fraction_above": 0.0,
+          "all_above_count": 0
+        },
+        "0.9": {
+          "mean_fraction_above": 0.0,
+          "all_above_count": 0
+        }
+      }
+    }
+  }
+}

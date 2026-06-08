@@ -1,0 +1,98 @@
+{
+  "model_name": "EleutherAI/pythia-70m-deduped",
+  "concept": "sentiment",
+  "steering_layers_tested": [
+    2,
+    3,
+    4
+  ],
+  "per_layer_summary": {
+    "2": {
+      "steering_layer": 2,
+      "empirical_thresholds": {
+        "95.0": 0.05860290676355362,
+        "99.0": 0.09173583984375
+      },
+      "per_threshold_analysis": {
+        "0.1": {
+          "mean_fraction_above": 1.0,
+          "all_above_count": 1
+        },
+        "0.3": {
+          "mean_fraction_above": 0.9872881174087524,
+          "all_above_count": 0
+        },
+        "0.5": {
+          "mean_fraction_above": 0.9766949415206909,
+          "all_above_count": 0
+        },
+        "0.7": {
+          "mean_fraction_above": 0.9766949415206909,
+          "all_above_count": 0
+        },
+        "0.9": {
+          "mean_fraction_above": 0.9766949415206909,
+          "all_above_count": 0
+        }
+      }
+    },
+    "3": {
+      "steering_layer": 3,
+      "empirical_thresholds": {
+        "95.0": 0.009057235904037952,
+        "99.0": 0.052859190851449966
+      },
+      "per_threshold_analysis": {
+        "0.1": {
+          "mean_fraction_above": 1.0,
+          "all_above_count": 1
+        },
+        "0.3": {
+          "mean_fraction_above": 0.9940000176429749,
+          "all_above_count": 0
+        },
+        "0.5": {
+          "mean_fraction_above": 0.6460000276565552,
+          "all_above_count": 0
+        },
+        "0.7": {
+          "mean_fraction_above": 0.6420000195503235,
+          "all_above_count": 0
+        },
+        "0.9": {
+          "mean_fraction_above": 0.5420000553131104,
+          "all_above_count": 0
+        }
+      }
+    },
+    "4": {
+      "steering_layer": 4,
+      "empirical_thresholds": {
+        "95.0": -0.0035034180618822575,
+        "99.0": 0.03178039565682411
+      },
+      "per_threshold_analysis": {
+        "0.1": {
+          "mean_fraction_above": 1.0,
+          "all_above_count": 1
+        },
+        "0.3": {
+          "mean_fraction_above": 0.9920000433921814,
+          "all_above_count": 0
+        },
+        "0.5": {
+          "mean_fraction_above": 0.984000027179718,
+          "all_above_count": 0
+        },
+        "0.7": {
+          "mean_fraction_above": 0.9820000529289246,
+          "all_above_count": 0
+        },
+        "0.9": {
+          "mean_fraction_above": 0.9660000205039978,
+          "all_above_count": 0
+        }
+      }
+    }
+  }
+}

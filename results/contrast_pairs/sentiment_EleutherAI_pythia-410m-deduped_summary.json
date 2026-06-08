@@ -1,0 +1,413 @@
+{
+  "model_name": "EleutherAI/pythia-410m-deduped",
+  "concept": "sentiment",
+  "steering_layers_tested": [
+    9,
+    12,
+    14,
+    16,
+    18
+  ],
+  "per_layer_summary": {
+    "9": {
+      "steering_layer": 9,
+      "empirical_thresholds": {
+        "95.0": 0.06637130677700043,
+        "99.0": 0.12082426995038986
+      },
+      "experiment1_holds_count": {
+        "0.1": {
+          "holds": 0,
+          "total": 24
+        },
+        "0.3": {
+          "holds": 0,
+          "total": 24
+        },
+        "0.5": {
+          "holds": 0,
+          "total": 24
+        },
+        "0.7": {
+          "holds": 0,
+          "total": 24
+        },
+        "0.9": {
+          "holds": 0,
+          "total": 24
+        }
+      },
+      "experiment2_holds": {
+        "0.1": {
+          "holds": false,
+          "positive_layers_above": [
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "negative_layers_above": [
+            0,
+            1,
+            2,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14
+          ]
+        },
+        "0.3": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.5": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.7": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.9": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        }
+      }
+    },
+    "12": {
+      "steering_layer": 12,
+      "empirical_thresholds": {
+        "95.0": 0.028799993917346,
+        "99.0": 0.058226220309734344
+      },
+      "experiment1_holds_count": {
+        "0.1": {
+          "holds": 1,
+          "total": 24
+        },
+        "0.3": {
+          "holds": 0,
+          "total": 24
+        },
+        "0.5": {
+          "holds": 0,
+          "total": 24
+        },
+        "0.7": {
+          "holds": 0,
+          "total": 24
+        },
+        "0.9": {
+          "holds": 0,
+          "total": 24
+        }
+      },
+      "experiment2_holds": {
+        "0.1": {
+          "holds": true,
+          "positive_layers_above": [
+            23
+          ],
+          "negative_layers_above": []
+        },
+        "0.3": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.5": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.7": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.9": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        }
+      }
+    },
+    "14": {
+      "steering_layer": 14,
+      "empirical_thresholds": {
+        "95.0": 0.04790646582841873,
+        "99.0": 0.07382946461439133
+      },
+      "experiment1_holds_count": {
+        "0.1": {
+          "holds": 1,
+          "total": 24
+        },
+        "0.3": {
+          "holds": 0,
+          "total": 24
+        },
+        "0.5": {
+          "holds": 0,
+          "total": 24
+        },
+        "0.7": {
+          "holds": 0,
+          "total": 24
+        },
+        "0.9": {
+          "holds": 0,
+          "total": 24
+        }
+      },
+      "experiment2_holds": {
+        "0.1": {
+          "holds": false,
+          "positive_layers_above": [
+            23
+          ],
+          "negative_layers_above": [
+            0,
+            1,
+            2
+          ]
+        },
+        "0.3": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.5": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.7": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.9": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        }
+      }
+    },
+    "16": {
+      "steering_layer": 16,
+      "empirical_thresholds": {
+        "95.0": 0.18482448160648346,
+        "99.0": 0.18823504447937012
+      },
+      "experiment1_holds_count": {
+        "0.1": {
+          "holds": 0,
+          "total": 24
+        },
+        "0.3": {
+          "holds": 0,
+          "total": 24
+        },
+        "0.5": {
+          "holds": 0,
+          "total": 24
+        },
+        "0.7": {
+          "holds": 0,
+          "total": 24
+        },
+        "0.9": {
+          "holds": 0,
+          "total": 24
+        }
+      },
+      "experiment2_holds": {
+        "0.1": {
+          "holds": false,
+          "positive_layers_above": [
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23
+          ],
+          "negative_layers_above": [
+            0,
+            1,
+            2,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23
+          ]
+        },
+        "0.3": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.5": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.7": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.9": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        }
+      }
+    },
+    "18": {
+      "steering_layer": 18,
+      "empirical_thresholds": {
+        "95.0": 0.20162121951580048,
+        "99.0": 0.20686501264572144
+      },
+      "experiment1_holds_count": {
+        "0.1": {
+          "holds": 0,
+          "total": 24
+        },
+        "0.3": {
+          "holds": 0,
+          "total": 24
+        },
+        "0.5": {
+          "holds": 0,
+          "total": 24
+        },
+        "0.7": {
+          "holds": 0,
+          "total": 24
+        },
+        "0.9": {
+          "holds": 0,
+          "total": 24
+        }
+      },
+      "experiment2_holds": {
+        "0.1": {
+          "holds": false,
+          "positive_layers_above": [
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23
+          ],
+          "negative_layers_above": [
+            0,
+            1,
+            2,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23
+          ]
+        },
+        "0.3": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.5": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.7": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.9": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,316 @@
+{
+  "model_name": "EleutherAI/pythia-160m-deduped",
+  "concept": "sentiment",
+  "steering_layers_tested": [
+    4,
+    6,
+    7,
+    8,
+    9
+  ],
+  "per_layer_summary": {
+    "4": {
+      "steering_layer": 4,
+      "empirical_thresholds": {
+        "95.0": 0.026227986440062523,
+        "99.0": 0.0426674485206604
+      },
+      "experiment1_holds_count": {
+        "0.1": {
+          "holds": 0,
+          "total": 12
+        },
+        "0.3": {
+          "holds": 0,
+          "total": 12
+        },
+        "0.5": {
+          "holds": 0,
+          "total": 12
+        },
+        "0.7": {
+          "holds": 0,
+          "total": 12
+        },
+        "0.9": {
+          "holds": 0,
+          "total": 12
+        }
+      },
+      "experiment2_holds": {
+        "0.1": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.3": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.5": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.7": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.9": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        }
+      }
+    },
+    "6": {
+      "steering_layer": 6,
+      "empirical_thresholds": {
+        "95.0": -0.0011597670381888747,
+        "99.0": 0.02197779156267643
+      },
+      "experiment1_holds_count": {
+        "0.1": {
+          "holds": 0,
+          "total": 12
+        },
+        "0.3": {
+          "holds": 0,
+          "total": 12
+        },
+        "0.5": {
+          "holds": 0,
+          "total": 12
+        },
+        "0.7": {
+          "holds": 0,
+          "total": 12
+        },
+        "0.9": {
+          "holds": 0,
+          "total": 12
+        }
+      },
+      "experiment2_holds": {
+        "0.1": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.3": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.5": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.7": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.9": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        }
+      }
+    },
+    "7": {
+      "steering_layer": 7,
+      "empirical_thresholds": {
+        "95.0": 0.03911858797073364,
+        "99.0": 0.06410953402519226
+      },
+      "experiment1_holds_count": {
+        "0.1": {
+          "holds": 0,
+          "total": 12
+        },
+        "0.3": {
+          "holds": 0,
+          "total": 12
+        },
+        "0.5": {
+          "holds": 0,
+          "total": 12
+        },
+        "0.7": {
+          "holds": 0,
+          "total": 12
+        },
+        "0.9": {
+          "holds": 0,
+          "total": 12
+        }
+      },
+      "experiment2_holds": {
+        "0.1": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.3": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.5": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.7": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.9": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        }
+      }
+    },
+    "8": {
+      "steering_layer": 8,
+      "empirical_thresholds": {
+        "95.0": 0.04593589901924133,
+        "99.0": 0.06115889176726341
+      },
+      "experiment1_holds_count": {
+        "0.1": {
+          "holds": 0,
+          "total": 12
+        },
+        "0.3": {
+          "holds": 0,
+          "total": 12
+        },
+        "0.5": {
+          "holds": 0,
+          "total": 12
+        },
+        "0.7": {
+          "holds": 0,
+          "total": 12
+        },
+        "0.9": {
+          "holds": 0,
+          "total": 12
+        }
+      },
+      "experiment2_holds": {
+        "0.1": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.3": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.5": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.7": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.9": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        }
+      }
+    },
+    "9": {
+      "steering_layer": 9,
+      "empirical_thresholds": {
+        "95.0": 0.15860332548618317,
+        "99.0": 0.22374102473258972
+      },
+      "experiment1_holds_count": {
+        "0.1": {
+          "holds": 1,
+          "total": 12
+        },
+        "0.3": {
+          "holds": 0,
+          "total": 12
+        },
+        "0.5": {
+          "holds": 0,
+          "total": 12
+        },
+        "0.7": {
+          "holds": 0,
+          "total": 12
+        },
+        "0.9": {
+          "holds": 0,
+          "total": 12
+        }
+      },
+      "experiment2_holds": {
+        "0.1": {
+          "holds": false,
+          "positive_layers_above": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "negative_layers_above": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ]
+        },
+        "0.3": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.5": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.7": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.9": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        }
+      }
+    }
+  }
+}
