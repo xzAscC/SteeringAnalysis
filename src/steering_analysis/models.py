@@ -15,8 +15,9 @@ class HookedModel:
     def __init__(self, config: ModelConfig):
         self.config = config
         dtype = _DTYPE_MAP.get(config.dtype, torch.float16)
+        device_map = "auto" if config.device == "auto" else {"": config.device}
         self.model = AutoModelForCausalLM.from_pretrained(
-            config.model_name, device_map="auto", dtype=dtype, trust_remote_code=config.trust_remote_code
+            config.model_name, device_map=device_map, dtype=dtype, trust_remote_code=config.trust_remote_code
         )
         self.tokenizer = AutoTokenizer.from_pretrained(config.model_name, trust_remote_code=config.trust_remote_code)
         if self.tokenizer.pad_token is None:
@@ -114,7 +115,7 @@ class HookedModel:
             with torch.no_grad():
                 output_ids = self.model.generate(**inputs, **gen_kwargs)
             generated_text = self.tokenizer.decode(
-                output_ids[0][inputs["input_ids"].shape[1]:],
+                output_ids[0][inputs["input_ids"].shape[1] :],
                 skip_special_tokens=True,
             )
             assert isinstance(generated_text, str)

@@ -78,6 +78,9 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    if args.num_samples <= 0:
+        parser.error(f"--num-samples must be positive, got {args.num_samples}")
+
     model_config = ModelConfig(model_name=args.model)
     model = HookedModel(model_config)
 
@@ -97,9 +100,9 @@ def main() -> None:
     save_results(result, args.output, label)
     print(f"Results saved to {args.output}/{label}_*")
 
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"Experiment Verdicts: {args.concept} / {args.model}")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     for s_layer, lr in result.per_layer_results.items():
         print(f"\n  Steering layer: {s_layer}")
         for threshold in sorted(lr.experiment1_verdicts.keys()):

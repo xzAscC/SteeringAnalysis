@@ -6,6 +6,7 @@ Usage:
 """
 
 import argparse
+from pathlib import Path
 
 import torch
 
@@ -88,7 +89,8 @@ def main() -> None:
 
     # Save
     model_slug = safe_model_name(args.model)
-    output_path = f"{args.output.rstrip('/')}/{args.concept}_{model_slug}_{args.method}.pt"
+    output_path = f"{args.output.rstrip('/')}/{args.concept}_{model_slug}_{args.method}_n{args.num_pairs}.pt"
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
     torch.save({"vector": vector, "num_pairs": len(pairs)}, output_path)
     print(f"Saved steering vector to {output_path}")
     print(f"Layers: {list(vector.layer_activations.keys())}")
