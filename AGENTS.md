@@ -17,7 +17,7 @@ Python 3.13 analysis project. Managed with `uv`.
 
 - **Package manager**: `uv` (not pip/poetry)
 - **Python**: 3.13 (`pyproject.toml` → `requires-python = ">=3.13"`)
-- **Build config**: `pyproject.toml` — currently minimal, no dependencies yet
+- **Build config**: `pyproject.toml` — project metadata, dependencies, and tooling configuration
 
 ## Conventions
 
