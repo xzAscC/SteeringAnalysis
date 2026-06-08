@@ -53,9 +53,9 @@ We test this assumption by comparing steered outputs $(O^+)$ against unsteered o
 
 ### Experiment 1: Token-level analysis
 
-At a fixed layer $l^*$, check whether $\cos(h_i^{+(l^*)}, c) > \tau$ for some or all token positions while $\cos(h_i^{-(l^*)}, c) \leq \tau$ for most token positions.
+For each layer $l$, check whether $\cos(h_i^{+(l)}, c) > \tau$ for some or all token positions while $\cos(h_i^{-(l)}, c) \leq \tau$ for most token positions. The experiment evaluates all layers independently and reports per-layer verdicts (ALL / SOME / NONE).
 
-This experiment tests whether a chosen layer can classify steered versus unsteered hidden states at the token level.
+This experiment tests whether any layer can classify steered versus unsteered hidden states at the token level.
 
 ### Experiment 2: Layer-level existence
 
