@@ -244,3 +244,52 @@ def test_apply_steering_uses_seed(hooked_model, sample_vector, tmp_path):
             output_dir=tmp_path,
         )
         mock_seed.assert_called_with(123)
+
+
+def test_apply_steering_angular_produces_jsonl(hooked_model, sample_vector, tmp_path):
+    import json
+
+    from steering_analysis.config import SteeringConfig
+    from steering_analysis.steering import apply_steering
+
+    config = SteeringConfig(multipliers=[1.0], num_samples=1, steering_method="angular")
+    apply_steering(hooked_model, sample_vector, prompts=["hello"], config=config, output_dir=tmp_path)
+    jsonl_files = list(tmp_path.glob("*.jsonl"))
+    assert len(jsonl_files) > 0, "Expected at least one .jsonl file for angular steering"
+    for jsonl_file in jsonl_files:
+        for line in jsonl_file.read_text().strip().splitlines():
+            record = json.loads(line)
+            assert record["steering_method"] == "angular"
+
+
+def test_apply_steering_records_steering_method(hooked_model, sample_vector, tmp_path):
+    import json
+
+    from steering_analysis.config import SteeringConfig
+    from steering_analysis.steering import apply_steering
+
+    config = SteeringConfig(multipliers=[1.0], num_samples=1)
+    apply_steering(hooked_model, sample_vector, prompts=["hello"], config=config, output_dir=tmp_path)
+    for jsonl_file in tmp_path.glob("*.jsonl"):
+        record = json.loads(jsonl_file.read_text().strip().splitlines()[0])
+        assert "steering_method" in record
+        assert record["steering_method"] == "additive"
+
+
+def test_apply_steering_angular_differs_from_additive(hooked_model, sample_vector, tmp_path):
+    import json
+    from unittest.mock import patch
+
+    from steering_analysis.config import SteeringConfig
+    from steering_analysis.steering import apply_steering
+
+    config_add = SteeringConfig(multipliers=[10.0], num_samples=1, steering_method="additive")
+    config_ang = SteeringConfig(multipliers=[10.0], num_samples=1, steering_method="angular")
+
+    with patch("steering_analysis.steering._compute_avg_activation", return_value={0: 100.0, 2: 100.0}):
+        apply_steering(hooked_model, sample_vector, prompts=["hello"], config=config_add, output_dir=tmp_path / "add")
+        apply_steering(hooked_model, sample_vector, prompts=["hello"], config=config_ang, output_dir=tmp_path / "ang")
+
+    add_text = json.loads((tmp_path / "add" / "layer_0.jsonl").read_text().strip())["generated_text"]
+    ang_text = json.loads((tmp_path / "ang" / "layer_0.jsonl").read_text().strip())["generated_text"]
+    assert add_text != ang_text, "Angular and additive steering should produce different outputs with strong scale"

@@ -83,6 +83,7 @@ class HookedModel:
         max_new_tokens: int = 100,
         temperature: float = 0.0,
         steer_tokens: int | None = None,
+        steering_method: str = "additive",
     ) -> str:
         inputs = self.tokenizer(prompt, return_tensors="pt")
         device = next(self.model.parameters()).device
@@ -96,7 +97,13 @@ class HookedModel:
                 return output
             tensor_output = output[0] if isinstance(output, tuple) else output
             steering = steering_vector.to(device=tensor_output.device, dtype=tensor_output.dtype)
-            tensor_output = tensor_output + steering * scale
+            if steering_method == "angular":
+                original_norm = tensor_output.norm(dim=-1, keepdim=True).clamp(min=1e-8)
+                shifted = tensor_output + steering * scale
+                shifted_norm = shifted.norm(dim=-1, keepdim=True).clamp(min=1e-8)
+                tensor_output = shifted * (original_norm / shifted_norm)
+            else:
+                tensor_output = tensor_output + steering * scale
             if isinstance(output, tuple):
                 return (tensor_output,) + output[1:]
             return tensor_output
