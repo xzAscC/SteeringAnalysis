@@ -18,6 +18,7 @@ from steering_analysis.config import ModelConfig, SteeringConfig
 from steering_analysis.extract import load_contrast_pairs
 from steering_analysis.models import HookedModel
 from steering_analysis.steering import apply_steering
+from steering_analysis.types import SteeringVector
 from steering_analysis.utils import safe_model_name, sample_with_seed
 
 
@@ -83,7 +84,8 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    data = torch.load(args.vector, weights_only=False)
+    torch.serialization.add_safe_globals([SteeringVector])
+    data = torch.load(args.vector, weights_only=True)
     vector = data["vector"] if isinstance(data, dict) and "vector" in data else data
 
     model_config = ModelConfig(model_name=args.model)
@@ -99,12 +101,10 @@ def main() -> None:
     )
 
     pairs = load_contrast_pairs(args.concept, args.num_samples, seed=args.seed)
-    prompts = sample_with_seed(
-        [p.negative for p in pairs], args.num_samples, seed=args.seed
-    )
+    prompts = sample_with_seed([p.negative for p in pairs], args.num_samples, seed=args.seed)
 
     model_slug = safe_model_name(args.model)
-    steer_label = f"prefix{args.steer_tokens}" if args.steer_tokens else "full"
+    steer_label = f"prefix{args.steer_tokens}" if args.steer_tokens is not None else "full"
     output_dir = f"{args.output.rstrip('/')}/{args.concept}_{model_slug}_{steer_label}"
 
     apply_steering(model, vector, prompts, steering_config, output_dir)

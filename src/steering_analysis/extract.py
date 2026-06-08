@@ -51,9 +51,7 @@ def _load_sentiment_data(concept_name: str, num_pairs: int, seed: int = 42) -> l
         ContrastPair(
             positive=p,
             negative=n,
-            metadata=ContrastPairMetadata(
-                concept=concept_name, dataset="sentiment", source="glue/sst2", pair_index=i
-            ),
+            metadata=ContrastPairMetadata(concept=concept_name, dataset="sentiment", source="glue/sst2", pair_index=i),
         )
         for i, (p, n) in enumerate(zip(pos_sampled, neg_sampled))
     ]
@@ -135,17 +133,28 @@ def extract_steering_vector(
         pos_activations = model.get_activations(positive_texts, layers)
         neg_activations = model.get_activations(negative_texts, layers)
 
+        if config.read_token_index < 0:
+            pos_encoded = model.tokenizer(positive_texts, return_tensors="pt", padding=True, truncation=True)
+            neg_encoded = model.tokenizer(negative_texts, return_tensors="pt", padding=True, truncation=True)
+            pos_seq_lens = pos_encoded["attention_mask"].sum(dim=1)
+            neg_seq_lens = neg_encoded["attention_mask"].sum(dim=1)
+
         for layer in layers:
             pos_act = pos_activations[layer]
             neg_act = neg_activations[layer]
-            pos_token_idx = config.read_token_index
-            neg_token_idx = config.read_token_index
-            if pos_token_idx < 0:
-                pos_token_idx = pos_act.shape[1] + pos_token_idx
-            if neg_token_idx < 0:
-                neg_token_idx = neg_act.shape[1] + neg_token_idx
-            positive_per_layer[layer].append(pos_act[:, pos_token_idx, :])
-            negative_per_layer[layer].append(neg_act[:, neg_token_idx, :])
+
+            if config.read_token_index < 0:
+                batch_size = pos_act.shape[0]
+                pos_last_idx = pos_seq_lens - 1
+                neg_last_idx = neg_seq_lens - 1
+                pos_tokens = pos_act[torch.arange(batch_size), pos_last_idx]
+                neg_tokens = neg_act[torch.arange(batch_size), neg_last_idx]
+            else:
+                pos_tokens = pos_act[:, config.read_token_index, :]
+                neg_tokens = neg_act[:, config.read_token_index, :]
+
+            positive_per_layer[layer].append(pos_tokens)
+            negative_per_layer[layer].append(neg_tokens)
 
     layer_activations: dict[int, Tensor] = {}
     for layer in layers:
