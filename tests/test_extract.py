@@ -147,3 +147,14 @@ class TestExtractSteeringVector:
         assert vec.abs().max() < 100, (
             f"Vector max abs value is {vec.abs().max():.1f}, likely selecting last token instead of second-to-last for read_token_index=-2"
         )
+
+    def test_extract_negative_index_out_of_range_raises(self, mock_hooked_model):
+        """read_token_index beyond sequence length should raise ValueError."""
+        hm = _make_model(mock_hooked_model)
+        # "a" has 1 real token. read_token_index=-2 asks for second-to-last, which doesn't exist.
+        pairs = [
+            ContrastPair(positive="a", negative="b", metadata=ContrastPairMetadata()),
+        ]
+        ext_config = ExtractionConfig(layers=[0.5], method="mean", batch_size=1, read_token_index=-2)
+        with pytest.raises(ValueError, match="read_token_index.*out of range"):
+            extract_steering_vector(hm, pairs, ext_config)
