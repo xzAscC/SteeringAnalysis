@@ -98,6 +98,8 @@ def main() -> None:
 
     if args.num_samples <= 0:
         parser.error(f"--num-samples must be positive, got {args.num_samples}")
+    if args.steer_tokens is not None and args.steer_tokens <= 0:
+        parser.error(f"--steer-tokens must be a positive integer, got {args.steer_tokens}")
 
     model_config = ModelConfig(model_name=args.model)
     model = HookedModel(model_config)

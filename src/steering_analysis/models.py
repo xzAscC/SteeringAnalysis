@@ -85,6 +85,9 @@ class HookedModel:
         steer_tokens: int | None = None,
         steering_method: str = "additive",
     ) -> str:
+        supported_methods = ("additive", "angular")
+        if steering_method not in supported_methods:
+            raise ValueError(f"Unsupported steering_method '{steering_method}'. Supported: {supported_methods}")
         inputs = self.tokenizer(prompt, return_tensors="pt")
         device = next(self.model.parameters()).device
         inputs = {k: v.to(device) for k, v in inputs.items()}
