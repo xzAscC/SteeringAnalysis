@@ -140,20 +140,19 @@ def run_contrast_verification(
     num_samples = min(config.num_samples, len(pairs))
     sample_pairs = pairs[:num_samples]
 
+    # Extract hidden states once — they don't depend on the steering layer
+    positive_activations: list[dict[int, Tensor]] = []
+    negative_activations: list[dict[int, Tensor]] = []
+    for pair in sample_pairs:
+        pos_act = get_all_layer_activations(model, pair.positive)
+        neg_act = get_all_layer_activations(model, pair.negative)
+        positive_activations.append(pos_act)
+        negative_activations.append(neg_act)
+
     per_layer_results: dict[int, ContrastLayerResult] = {}
 
     for s_layer in steering_layers:
         steering_vec = steering_vector.layer_activations[s_layer]
-
-        # Extract hidden states from positive and negative texts
-        positive_activations: list[dict[int, Tensor]] = []
-        negative_activations: list[dict[int, Tensor]] = []
-
-        for pair in sample_pairs:
-            pos_act = get_all_layer_activations(model, pair.positive)
-            neg_act = get_all_layer_activations(model, pair.negative)
-            positive_activations.append(pos_act)
-            negative_activations.append(neg_act)
 
         # Compute cosine similarity matrices
         cos_matrix_positive, cos_matrix_negative = compute_pair_cosine_matrices(
