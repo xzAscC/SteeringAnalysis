@@ -353,3 +353,17 @@ class TestAngularSteering:
             max_new_tokens=5,
         )
         assert text_default == text_explicit_additive, "Default steering_method should be additive"
+
+
+def test_generate_with_steering_rejects_unsupported_method(mock_hooked_model):
+    hm = HookedModel(ModelConfig(model_name="fake-model"))
+    sv = torch.randn(8)
+    with pytest.raises(ValueError, match="Unsupported steering_method"):
+        hm.generate_with_steering(
+            "hello",
+            layer_idx=2,
+            steering_vector=sv,
+            scale=5.0,
+            max_new_tokens=5,
+            steering_method="prefix",
+        )
