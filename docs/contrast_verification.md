@@ -43,7 +43,7 @@ Thresholds tested: τ ∈ {0.1, 0.3, 0.5, 0.7, 0.9}.
 
 | Model | Concept | Exp2 holds at τ=0.3? | Notes |
 |-------|---------|---------------------|-------|
-| 70m | refusal | L3, L4 | Weak separation only at high τ |
+| 70m | refusal | ✗ (L3 at τ=0.9, L4 at τ=0.7) | Weak separation only at high τ |
 | 70m | sentiment | ✗ | No separation at any threshold |
 | 70m | polite | ✗ | No separation at any threshold |
 | 160m | refusal | ✗ | Both pos/neg above at τ=0.1 |

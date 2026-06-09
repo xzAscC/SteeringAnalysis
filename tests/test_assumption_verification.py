@@ -299,6 +299,17 @@ class TestGetSteeredActivations:
 # ---------------------------------------------------------------------------
 
 
+class TestGetSteeredActivationsValidation:
+    def test_unsupported_steering_method_raises(self, mock_hooked_model):
+        from steering_analysis.assumption_verification import get_steered_activations
+
+        config = ModelConfig(model_name="fake-model")
+        hm = HookedModel(config)
+        sv = torch.randn(8)
+        with pytest.raises(ValueError, match="Unsupported steering_method"):
+            get_steered_activations(hm, "test", layer_idx=2, steering_vector=sv, scale=1.0, steering_method="prefix")
+
+
 class TestGenerateOrthogonalVector:
     def test_returns_unit_vector(self):
         from steering_analysis.assumption_verification import generate_orthogonal_vector
