@@ -37,6 +37,9 @@ def apply_steering(
     config: SteeringConfig,
     output_dir: str | Path,
 ) -> None:
+    supported_methods = ("additive", "angular")
+    if config.steering_method not in supported_methods:
+        raise ValueError(f"Unsupported steering_method '{config.steering_method}'. Supported: {supported_methods}")
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     torch.manual_seed(config.seed)
