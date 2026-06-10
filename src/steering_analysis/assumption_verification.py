@@ -195,11 +195,16 @@ def get_steered_activations(
     layer_idx: int,
     steering_vector: Tensor,
     scale: float,
+    steering_method: str = "additive",
 ) -> dict[int, Tensor]:
     """Forward pass over text with steering hook active at layer_idx, capturing all layers.
 
     The steering hook is registered FIRST so capture hooks see the steered output.
     """
+    supported_methods = ("additive", "angular")
+    if steering_method not in supported_methods:
+        raise ValueError(f"Unsupported steering_method '{steering_method}'. Supported: {supported_methods}")
+
     inputs = model.tokenizer(text, return_tensors="pt")
     device = next(model.model.parameters()).device
     inputs = {k: v.to(device) for k, v in inputs.items()}
@@ -211,7 +216,13 @@ def get_steered_activations(
 
     def steering_hook(module, input, output):
         tensor_output = output[0] if isinstance(output, tuple) else output
-        perturbed = tensor_output + sv.to(dtype=tensor_output.dtype) * scale
+        if steering_method == "angular":
+            original_norm = tensor_output.norm(dim=-1, keepdim=True).clamp(min=1e-8)
+            shifted = tensor_output + sv.to(dtype=tensor_output.dtype) * scale
+            shifted_norm = shifted.norm(dim=-1, keepdim=True).clamp(min=1e-8)
+            perturbed = shifted * (original_norm / shifted_norm)
+        else:
+            perturbed = tensor_output + sv.to(dtype=tensor_output.dtype) * scale
         if isinstance(output, tuple):
             return (perturbed,) + output[1:]
         return perturbed
@@ -311,7 +322,9 @@ def run_verification(model: HookedModel, concept: str, config: VerificationConfi
         num_pairs=config.extraction_num_pairs,
         seed=config.seed,
     )
-    steering_vector = extract_steering_vector(model, pairs, extraction_config)
+    steering_vector = extract_steering_vector(
+        model, pairs, extraction_config
+    )  # TODO: if we already have steering vector, we can use existing one.
 
     steering_layers = sorted(steering_vector.layer_activations.keys())
 
@@ -323,7 +336,7 @@ def run_verification(model: HookedModel, concept: str, config: VerificationConfi
 
     per_layer_results: dict[int, SteeringLayerResult] = {}
 
-    random_vec = None
+    random_vec = None  # TODO: good idea, but we did not include this one in our results.
     if config.run_controls:
         first_sv = steering_vector.layer_activations[steering_layers[0]]
         random_vec = generate_orthogonal_vector(first_sv, seed=config.seed + 1000)
@@ -345,6 +358,8 @@ def run_verification(model: HookedModel, concept: str, config: VerificationConfi
                 scale,
                 max_new_tokens=config.max_new_tokens,
                 temperature=config.temperature,
+                steer_tokens=config.steer_tokens,
+                steering_method=config.steering_method,
             )
             unsteered_text = model.generate_with_steering(
                 prompt,
@@ -355,7 +370,14 @@ def run_verification(model: HookedModel, concept: str, config: VerificationConfi
                 temperature=config.temperature,
             )
 
-            steered_act = get_steered_activations(model, steered_text, s_layer, steering_vec, scale)
+            steered_act = get_steered_activations(
+                model,
+                steered_text,
+                s_layer,
+                steering_vec,
+                scale,
+                steering_method=config.steering_method,
+            )
             unsteered_act = get_all_layer_activations(model, unsteered_text)
 
             concept_vec = steering_vector.layer_activations[s_layer]

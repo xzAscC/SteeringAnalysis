@@ -238,3 +238,132 @@ class TestDeviceConfig:
         config = ModelConfig(model_name="fake-model", device="cuda:0")
         HookedModel(config)
         assert captured["device_map"] == {"": "cuda:0"}
+
+
+class TestAngularSteering:
+    def test_angular_steering_produces_output(self, mock_hooked_model):
+        hm = HookedModel(ModelConfig(model_name="fake-model"))
+        sv = torch.randn(8)
+        text = hm.generate_with_steering(
+            "hello",
+            layer_idx=2,
+            steering_vector=sv,
+            scale=1.0,
+            steering_method="angular",
+            max_new_tokens=5,
+        )
+        assert isinstance(text, str)
+
+    def test_angular_steering_preserves_norm(self, mock_hooked_model):
+        hm = HookedModel(ModelConfig(model_name="fake-model"))
+        sv = torch.randn(8)
+        layer_idx = 2
+        scale = 5.0
+
+        activations_clean = hm.get_activations(["hello"], [layer_idx])
+        original_norm = activations_clean[layer_idx].norm(dim=-1)
+
+        activations_angular: dict[int, torch.Tensor] = {}
+        handles = []
+        model_layers = hm._get_layers_module()
+
+        def angular_hook(module, input, output):
+            t = output[0] if isinstance(output, tuple) else output
+            orig_norm = t.norm(dim=-1, keepdim=True).clamp(min=1e-8)
+            shifted = t + sv.to(dtype=t.dtype, device=t.device) * scale
+            shifted_norm = shifted.norm(dim=-1, keepdim=True).clamp(min=1e-8)
+            t = shifted * (orig_norm / shifted_norm)
+            if isinstance(output, tuple):
+                return (t,) + output[1:]
+            return t
+
+        handles.append(model_layers[layer_idx].register_forward_hook(angular_hook))
+        try:
+            with torch.no_grad():
+                _ = hm.model(**hm.tokenizer("hello", return_tensors="pt"))
+            for h in handles:
+                h.remove()
+            activations_angular = {layer_idx: hm.get_activations(["hello"], [layer_idx])[layer_idx]}
+        finally:
+            for h in handles:
+                h.remove()
+
+        steered_norm = activations_angular[layer_idx].norm(dim=-1)
+        assert torch.allclose(original_norm, steered_norm, atol=0.5), (
+            f"Angular steering should preserve norm: original={original_norm.mean():.4f}, "
+            f"angular={steered_norm.mean():.4f}"
+        )
+
+    def test_angular_steering_changes_direction(self, mock_hooked_model):
+        hm = HookedModel(ModelConfig(model_name="fake-model"))
+        sv = torch.randn(8)
+        text = "hello"
+
+        text_angular = hm.generate_with_steering(
+            text,
+            layer_idx=2,
+            steering_vector=sv,
+            scale=50.0,
+            steering_method="angular",
+            max_new_tokens=5,
+        )
+        text_clean = hm.generate_with_steering(
+            text,
+            layer_idx=2,
+            steering_vector=sv,
+            scale=0.0,
+            max_new_tokens=5,
+        )
+        assert text_angular != text_clean, "Angular steering should change output from unsteered at high scale"
+
+    def test_angular_differs_from_additive(self, mock_hooked_model):
+        from steering_analysis.assumption_verification import get_steered_activations
+
+        hm = HookedModel(ModelConfig(model_name="fake-model"))
+        sv = torch.randn(8)
+
+        additive_act = get_steered_activations(hm, "hello", layer_idx=2, steering_vector=sv, scale=10.0)
+        angular_act = get_steered_activations(
+            hm,
+            "hello",
+            layer_idx=2,
+            steering_vector=sv,
+            scale=10.0,
+            steering_method="angular",
+        )
+        assert not additive_act[2].allclose(angular_act[2]), "Angular and additive should produce different activations"
+
+    def test_default_steering_method_is_additive(self, mock_hooked_model):
+        hm = HookedModel(ModelConfig(model_name="fake-model"))
+        sv = torch.randn(8)
+
+        text_default = hm.generate_with_steering(
+            "hello",
+            layer_idx=2,
+            steering_vector=sv,
+            scale=5.0,
+            max_new_tokens=5,
+        )
+        text_explicit_additive = hm.generate_with_steering(
+            "hello",
+            layer_idx=2,
+            steering_vector=sv,
+            scale=5.0,
+            steering_method="additive",
+            max_new_tokens=5,
+        )
+        assert text_default == text_explicit_additive, "Default steering_method should be additive"
+
+
+def test_generate_with_steering_rejects_unsupported_method(mock_hooked_model):
+    hm = HookedModel(ModelConfig(model_name="fake-model"))
+    sv = torch.randn(8)
+    with pytest.raises(ValueError, match="Unsupported steering_method"):
+        hm.generate_with_steering(
+            "hello",
+            layer_idx=2,
+            steering_vector=sv,
+            scale=5.0,
+            max_new_tokens=5,
+            steering_method="prefix",
+        )

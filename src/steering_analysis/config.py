@@ -41,6 +41,7 @@ class SteeringConfig:
     max_new_tokens: int = 100
     temperature: float = 0.0
     steer_tokens: int | None = None
+    steering_method: str = "additive"
 
 
 @dataclass
@@ -56,3 +57,5 @@ class VerificationConfig:
     num_samples: int = 5
     seed: int = 42
     run_controls: bool = False
+    steering_method: str = "additive"
+    steer_tokens: int | None = None

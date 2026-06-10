@@ -1,0 +1,98 @@
+{
+  "model_name": "EleutherAI/pythia-70m-deduped",
+  "concept": "refusal",
+  "steering_layers_tested": [
+    2,
+    3,
+    4
+  ],
+  "per_layer_summary": {
+    "2": {
+      "steering_layer": 2,
+      "empirical_thresholds": {
+        "95.0": 0.40185546875,
+        "99.0": 0.5283203125
+      },
+      "per_threshold_analysis": {
+        "0.1": {
+          "mean_fraction_above": 1.0,
+          "all_above_count": 1
+        },
+        "0.3": {
+          "mean_fraction_above": 1.0,
+          "all_above_count": 1
+        },
+        "0.5": {
+          "mean_fraction_above": 1.0,
+          "all_above_count": 1
+        },
+        "0.7": {
+          "mean_fraction_above": 1.0,
+          "all_above_count": 1
+        },
+        "0.9": {
+          "mean_fraction_above": 1.0,
+          "all_above_count": 1
+        }
+      }
+    },
+    "3": {
+      "steering_layer": 3,
+      "empirical_thresholds": {
+        "95.0": 0.4228515625,
+        "99.0": 0.5595703125
+      },
+      "per_threshold_analysis": {
+        "0.1": {
+          "mean_fraction_above": 1.0,
+          "all_above_count": 1
+        },
+        "0.3": {
+          "mean_fraction_above": 1.0,
+          "all_above_count": 1
+        },
+        "0.5": {
+          "mean_fraction_above": 1.0,
+          "all_above_count": 1
+        },
+        "0.7": {
+          "mean_fraction_above": 1.0,
+          "all_above_count": 1
+        },
+        "0.9": {
+          "mean_fraction_above": 1.0,
+          "all_above_count": 1
+        }
+      }
+    },
+    "4": {
+      "steering_layer": 4,
+      "empirical_thresholds": {
+        "95.0": 0.272216796875,
+        "99.0": 0.38706299662590027
+      },
+      "per_threshold_analysis": {
+        "0.1": {
+          "mean_fraction_above": 1.0,
+          "all_above_count": 1
+        },
+        "0.3": {
+          "mean_fraction_above": 1.0,
+          "all_above_count": 1
+        },
+        "0.5": {
+          "mean_fraction_above": 1.0,
+          "all_above_count": 1
+        },
+        "0.7": {
+          "mean_fraction_above": 1.0,
+          "all_above_count": 1
+        },
+        "0.9": {
+          "mean_fraction_above": 1.0,
+          "all_above_count": 1
+        }
+      }
+    }
+  }
+}
