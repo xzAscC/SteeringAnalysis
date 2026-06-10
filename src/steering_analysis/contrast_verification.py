@@ -96,9 +96,10 @@ def compute_pair_cosine_matrices(
             pos_h = pos_act[layer_idx]  # (1, seq_len, hidden_dim)
             neg_h = neg_act[layer_idx]  # (1, seq_len, hidden_dim)
 
-            # Cosine similarity per token: (1, seq_len)
-            pos_cos = functional.cosine_similarity(pos_h.float(), sv.float().expand_as(pos_h), dim=-1)
-            neg_cos = functional.cosine_similarity(neg_h.float(), sv.float().expand_as(neg_h), dim=-1)
+            sv_pos = sv.to(device=pos_h.device, dtype=pos_h.dtype)
+            sv_neg = sv.to(device=neg_h.device, dtype=neg_h.dtype)
+            pos_cos = functional.cosine_similarity(pos_h, sv_pos.expand_as(pos_h), dim=-1)
+            neg_cos = functional.cosine_similarity(neg_h, sv_neg.expand_as(neg_h), dim=-1)
 
             pos_cosines.append(pos_cos.squeeze(0))  # (seq_len,)
             neg_cosines.append(neg_cos.squeeze(0))  # (seq_len,)
