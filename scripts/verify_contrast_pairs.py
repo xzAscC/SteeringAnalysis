@@ -75,6 +75,8 @@ def main() -> None:
 
     if args.num_samples <= 0:
         parser.error(f"--num-samples must be positive, got {args.num_samples}")
+    if args.num_pairs <= 0:
+        parser.error(f"--num-pairs must be positive, got {args.num_pairs}")
 
     model_config = ModelConfig(model_name=args.model)
     model = HookedModel(model_config)
