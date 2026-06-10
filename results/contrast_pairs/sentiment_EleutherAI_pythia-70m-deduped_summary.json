@@ -1,0 +1,186 @@
+{
+  "model_name": "EleutherAI/pythia-70m-deduped",
+  "concept": "sentiment",
+  "steering_layers_tested": [
+    2,
+    3,
+    4
+  ],
+  "per_layer_summary": {
+    "2": {
+      "steering_layer": 2,
+      "empirical_thresholds": {
+        "95.0": 0.036668822169303894,
+        "99.0": 0.08701315522193909
+      },
+      "experiment1_holds_count": {
+        "0.1": {
+          "holds": 0,
+          "total": 6
+        },
+        "0.3": {
+          "holds": 0,
+          "total": 6
+        },
+        "0.5": {
+          "holds": 0,
+          "total": 6
+        },
+        "0.7": {
+          "holds": 0,
+          "total": 6
+        },
+        "0.9": {
+          "holds": 0,
+          "total": 6
+        }
+      },
+      "experiment2_holds": {
+        "0.1": {
+          "holds": false,
+          "positive_layers_above": [
+            2
+          ],
+          "negative_layers_above": [
+            1,
+            2
+          ]
+        },
+        "0.3": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.5": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.7": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.9": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        }
+      }
+    },
+    "3": {
+      "steering_layer": 3,
+      "empirical_thresholds": {
+        "95.0": -0.00705508841201663,
+        "99.0": 0.04570353403687477
+      },
+      "experiment1_holds_count": {
+        "0.1": {
+          "holds": 0,
+          "total": 6
+        },
+        "0.3": {
+          "holds": 0,
+          "total": 6
+        },
+        "0.5": {
+          "holds": 0,
+          "total": 6
+        },
+        "0.7": {
+          "holds": 0,
+          "total": 6
+        },
+        "0.9": {
+          "holds": 0,
+          "total": 6
+        }
+      },
+      "experiment2_holds": {
+        "0.1": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": [
+            2
+          ]
+        },
+        "0.3": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.5": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.7": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.9": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        }
+      }
+    },
+    "4": {
+      "steering_layer": 4,
+      "empirical_thresholds": {
+        "95.0": -0.035714730620384216,
+        "99.0": -0.0008722415659576654
+      },
+      "experiment1_holds_count": {
+        "0.1": {
+          "holds": 0,
+          "total": 6
+        },
+        "0.3": {
+          "holds": 0,
+          "total": 6
+        },
+        "0.5": {
+          "holds": 0,
+          "total": 6
+        },
+        "0.7": {
+          "holds": 0,
+          "total": 6
+        },
+        "0.9": {
+          "holds": 0,
+          "total": 6
+        }
+      },
+      "experiment2_holds": {
+        "0.1": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.3": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.5": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.7": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        },
+        "0.9": {
+          "holds": false,
+          "positive_layers_above": [],
+          "negative_layers_above": []
+        }
+      }
+    }
+  }
+}

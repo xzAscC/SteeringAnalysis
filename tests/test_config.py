@@ -93,3 +93,38 @@ def test_verification_config_custom():
     assert cfg.empirical_percentiles == [90.0]
     assert cfg.steering_multiplier == 2.0
     assert cfg.num_samples == 10
+
+
+# ---------------------------------------------------------------------------
+# steering_method field tests
+# ---------------------------------------------------------------------------
+
+
+def test_steering_config_default_steering_method_is_additive():
+    cfg = SteeringConfig()
+    assert cfg.steering_method == "additive"
+
+
+def test_steering_config_custom_steering_method():
+    cfg = SteeringConfig(steering_method="angular")
+    assert cfg.steering_method == "angular"
+
+
+def test_verification_config_default_steering_method_is_additive():
+    cfg = VerificationConfig()
+    assert cfg.steering_method == "additive"
+
+
+def test_verification_config_custom_steering_method():
+    cfg = VerificationConfig(steering_method="angular")
+    assert cfg.steering_method == "angular"
+
+
+def test_verification_config_default_steer_tokens_is_none():
+    cfg = VerificationConfig()
+    assert cfg.steer_tokens is None
+
+
+def test_verification_config_custom_steer_tokens():
+    cfg = VerificationConfig(steer_tokens=10)
+    assert cfg.steer_tokens == 10
