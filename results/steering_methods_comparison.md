@@ -97,7 +97,7 @@ Instead of generating steered/unsteered text, this experiment directly measures 
 
 | Model | Concept | Exp2 holds at τ=0.1? | Exp2 holds at τ=0.3? | Notes |
 |-------|---------|---------------------|---------------------|-------|
-| 70m | refusal | ✗ (L2–L4 both above) | L3, L4 | Weak separation |
+| 70m | refusal | ✗ (L2–L4 both above) | ✗ (L3 at τ=0.9, L4 at τ=0.7) | Weak separation only at high τ |
 | 70m | sentiment | ✗ | ✗ | No separation at any threshold |
 | 70m | polite | ✗ | ✗ | No separation at any threshold |
 | 160m | refusal | ✗ | ✗ | Both pos/neg above at τ=0.1 |
@@ -131,9 +131,9 @@ Instead of generating steered/unsteered text, this experiment directly measures 
 | 160m | refusal | L7–L9 | L4–L9 | ✗ | ✗ |
 | 160m | sentiment | L4–L9 | L4–L9 | L4–L9 | ✗ |
 | 160m | polite | L4–L9 | L4–L9 | L4–L9 | ✗ |
-| 410m | refusal | L14, L16–L18 | L14–L18 | L9–L18 | L16 only |
+| 410m | refusal | L14, L16–L18 | L14–L18 | L9–L18 | L18 only |
 | 410m | sentiment | L9–L18 | L9–L18 | L9–L18 | ✗ |
-| 410m | polite | L9–L18 | L14–L16 | L9–L18 | L14 only |
+| 410m | polite | L9–L18 | L14–L16 | L9–L18 | ✗ |
 
 ### 3.2 Method Rankings
 
