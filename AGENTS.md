@@ -1,48 +1,77 @@
 # SteeringAnalysis
 
-Python 3.13 analysis project. Managed with `uv`.
+Concept vector extraction and activation steering analysis for LLMs. Python 3.13, managed with `uv`.
+
+## Commands
+
+```bash
+uv sync                              # install dependencies
+uv run pytest                        # run all tests
+uv run pytest tests/test_extract.py  # run single test file
+uv run pytest -x                     # stop on first failure
+uv run ruff check src/ tests/        # lint
+uv run ruff format src/ tests/       # format
+```
+
+## Architecture
+
+**Package**: `steering_analysis` (import name), built by hatchling from `src/steering_analysis/`.
+
+**Core pipeline**: load contrast pairs → extract steering vector → apply steering → verify assumptions.
+
+| Module | Purpose |
+|---|---|
+| `config.py` | Dataclass configs: `ModelConfig`, `ExtractionConfig`, `SteeringConfig`, `VerificationConfig` |
+| `types.py` | `ContrastPair`, `SteeringVector`, `ContrastPairMetadata` |
+| `models.py` | `HookedModel` — wraps HF `AutoModelForCausalLM` with forward hooks for activation capture and steering |
+| `extract.py` | Steering vector extraction (mean/PCA aggregators) + dataset loaders for 3 concepts |
+| `steering.py` | `apply_steering()` — generate text with steering at configurable layers/multipliers |
+| `assumption_verification.py` | Exp1 (token-level) and Exp2 (layer-level) verification of Assumption 1 |
+| `contrast_verification.py` | Same experiments applied to source contrast pairs instead of generated text |
+
+**Scripts** (`scripts/`): CLI entrypoints, run with `uv run python scripts/<name>.py`. Each has `--help`.
+
+**Valid concepts**: `refusal`, `sentiment`, `polite`. Hardcoded in `config.VALID_CONCEPTS`.
+
+**Steering methods**: `additive` (default), `angular` (norm-preserving). Passed via `--steering-method`.
+
+**Dataset sources**: HF Hub datasets loaded at runtime (glue/sst2, LLM-LAT/benign+harmful, Intel/polite-guard). Tests mock these.
 
 ## Directory Layout
 
-| Directory | Purpose |
+| Path | Purpose |
 |---|---|
-| `src/` | All source code |
-| `scripts/` | Run scripts and entrypoints |
-| `tests/` | Test suite |
-| `docs/` | Experiment descriptions and documentation |
-| `results/` | Experiment output and results |
-| `.ignore` | Files gitignored but searchable by OpenCode agents |
+| `src/steering_analysis/` | All source code |
+| `scripts/` | CLI entrypoints for experiments |
+| `tests/` | Test suite (flat, not nested by module) |
+| `docs/` | Experiment descriptions (markdown with LaTeX) |
+| `results/` | Experiment output (`.pt`, `.json`, `.jsonl`) |
+| `.ignore` | Gitignored dirs that OpenCode can still search (`results/`, `docs/`) |
 
-## Tooling
+## Testing
 
-- **Package manager**: `uv` (not pip/poetry)
-- **Python**: 3.13 (`pyproject.toml` → `requires-python = ">=3.13"`)
-- **Build config**: `pyproject.toml` — project metadata, dependencies, and tooling configuration
-
-## Conventions
-
-- Each experiment has its description in `docs/` and output in `results/`.
-- `.ignore` contains files excluded from git but included for OpenCode search — do not remove entries from it without understanding why they are there.
+- **`conftest.py`** provides `FakeCausalLM`, `FakeTokenizer`, `mock_hooked_model` fixture — monkeypatches `transformers.AutoModelForCausalLM` and `AutoTokenizer` so tests run CPU-only without downloading models.
+- Tests import from `steering_analysis.*` (not `src.steering_analysis`) because `pyproject.toml` sets `pythonpath = ["src"]`.
+- Test files are flat in `tests/`, not nested. Naming: `test_{module}.py`.
 
 ## Development Workflow — TDD (MANDATORY)
 
-All code MUST be written following Test-Driven Development. No exceptions.
+1. **Write failing tests first.** Define expected behavior before implementation.
+2. **Red → Green → Refactor.** Minimum implementation to pass, then clean up.
+3. **Run tests after every change.** `uv run pytest`.
+4. Never submit code without tests.
 
-### Rules
+## Lint & Format
 
-1. **Write tests FIRST.** Before any implementation, write failing tests that define expected behavior.
-2. **Red → Green → Refactor.** Follow the strict TDD cycle:
-   - **Red**: Write a test that fails (defines the desired behavior).
-   - **Green**: Write the minimum implementation to make the test pass.
-   - **Refactor**: Clean up code while keeping tests green.
-3. **Never write implementation without a corresponding test.** Every function, class, and module must have tests written before (or alongside) the implementation.
-4. **Tests must fail first.** If a test passes before implementation exists, it's not a valid TDD test — re-examine it.
-5. **Run tests after every change.** Use `uv run pytest` to verify.
-6. **Test file convention**: `tests/` mirrors `src/` structure. For `src/foo/bar.py`, create `tests/test_foo/test_bar.py`.
+- **Ruff**: `target-version = "py313"`, `line-length = 120`
+- Enabled rules: `E`, `F`, `I`, `N`, `W`, `UP`
+- Run `uv run ruff check src/ tests/` and `uv run ruff format src/ tests/` before committing.
 
-### What this means for agents
+## Gotchas
 
-- When asked to implement a feature → start by writing tests, then implement.
-- When asked to fix a bug → write a test that reproduces the bug first, then fix.
-- When asked to refactor → tests must already exist and stay green throughout.
-- Never submit code without tests.
+- **Layer indices are relative**: `ExtractionConfig.layers` uses floats (0.0–1.0), resolved to absolute layer indices via `HookedModel.resolve_layers()`. Default: `[0.4, 0.5, 0.6, 0.7, 0.8]`.
+- **`read_token_index=-1`** (default): extracts from the last token in each sequence, handling variable-length padding correctly.
+- **`allenai/` models** auto-set `trust_remote_code=True` via `ModelConfig.__post_init__`.
+- **Scripts require a GPU** for real model inference. Tests use fakes and run CPU-only.
+- **`pad_token`**: `HookedModel` sets `pad_token = eos_token` when the tokenizer has none.
+- **`.ignore`**: Do not remove entries — `results/` and `docs/` are gitignored but needed for OpenCode search.
